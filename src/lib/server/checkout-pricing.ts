@@ -12,7 +12,8 @@
 
 import { getProductById } from './db/products.js';
 import { getProductVariantById } from './db/product-variants.js';
-import { calculateOrderTax, roundMoney } from '../checkout-pricing.js';
+import { getTaxSettings } from './db/site-settings.js';
+import { calculateOrderTax, roundMoney, taxRateFromSettings } from '../checkout-pricing.js';
 
 export interface RepriceableItem {
   product_id?: string;
@@ -32,6 +33,8 @@ export interface RepricedCheckout<T> {
   items: Array<RepricedItem<T>>;
   subtotal: number;
   tax: number;
+  /** The site's resolved tax fraction, so a caller can record what was charged. */
+  taxRate: number;
   total: number;
 }
 
@@ -55,6 +58,11 @@ function assertValidQuantity(quantity: unknown, label: string): number {
 /**
  * Replace each item's client-supplied price with the one stored for that
  * product/variant, and recompute subtotal, tax and total from the result.
+ *
+ * Tax comes from the site's own settings, not from a platform-wide rate, so a
+ * store that has not enabled tax calculations is charged none. The storefront
+ * reads the same settings through `/checkout`'s load, so the quoted tax and the
+ * charged tax stay one number.
  *
  * Shipping is passed through: it is chosen from server-offered options but the
  * selection logic (per-product groups, free-shipping thresholds) still lives in
@@ -112,13 +120,15 @@ export async function repriceCheckout<T extends RepriceableItem>(
   }
 
   const subtotal = roundMoney(repriced.reduce((sum, entry) => sum + entry.lineTotal, 0));
-  const tax = calculateOrderTax(subtotal);
+  const taxRate = taxRateFromSettings(await getTaxSettings(db, siteId));
+  const tax = calculateOrderTax(subtotal, taxRate);
   const shipping = roundMoney(shippingCost);
 
   return {
     items: repriced,
     subtotal,
     tax,
+    taxRate,
     total: roundMoney(subtotal + shipping + tax)
   };
 }

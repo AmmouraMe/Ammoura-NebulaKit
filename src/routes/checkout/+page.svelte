@@ -17,6 +17,9 @@
     calculateTotalShippingCost
   } from '../../lib/utils/shippingGroups';
   import { calculateOrderTax } from '$lib/checkout-pricing';
+  import type { PageData } from './$types';
+
+  export let data: PageData;
 
   let currentStep = 1;
   let isSubmitting = false;
@@ -66,8 +69,9 @@
     return false; // Shipping not yet determined
   })();
 
-  // Same rule the server charges with — see $lib/checkout-pricing
-  $: tax = calculateOrderTax(subtotal);
+  // Same rule and the same per-site rate the server charges with — the rate
+  // comes from this route's load, see +page.server.ts and $lib/checkout-pricing
+  $: tax = calculateOrderTax(subtotal, data.taxRate);
   $: total = subtotal + shippingCost + tax;
 
   // Reload shipping groups when cart items change

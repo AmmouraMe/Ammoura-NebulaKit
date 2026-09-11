@@ -1,22 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { repriceCheckout, CheckoutPricingError } from './checkout-pricing';
-import { CHECKOUT_TAX_RATE } from '../checkout-pricing';
 
 vi.mock('./db/products.js', () => ({ getProductById: vi.fn() }));
 vi.mock('./db/product-variants.js', () => ({ getProductVariantById: vi.fn() }));
+vi.mock('./db/site-settings.js', () => ({ getTaxSettings: vi.fn() }));
 
 const { getProductById } = await import('./db/products.js');
 const { getProductVariantById } = await import('./db/product-variants.js');
+const { getTaxSettings } = await import('./db/site-settings.js');
 
 const getProduct = getProductById as ReturnType<typeof vi.fn>;
 const getVariant = getProductVariantById as ReturnType<typeof vi.fn>;
+const getTax = getTaxSettings as ReturnType<typeof vi.fn>;
 
 const db = {} as D1Database;
 const SITE = 'site-1';
 
+/** The site charges tax at `percent`; `null` leaves calculations switched off. */
+function siteTax(percent: number | null) {
+  getTax.mockResolvedValue({
+    calculationsEnabled: percent !== null,
+    pricesIncludeTax: false,
+    displayPricesWithTax: false,
+    defaultRate: percent ?? 0,
+    taxClasses: []
+  });
+}
+
 describe('repriceCheckout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    siteTax(8);
   });
 
   it('ignores the price the client sent and charges the stored one', async () => {
@@ -31,7 +45,7 @@ describe('repriceCheckout', () => {
 
     expect(result.items[0].item.price).toBe(200);
     expect(result.subtotal).toBe(200);
-    expect(result.total).toBe(200 + 200 * CHECKOUT_TAX_RATE);
+    expect(result.total).toBe(200 + 200 * 0.08);
   });
 
   it('prices a variant from the variant row, not the parent product', async () => {
@@ -124,6 +138,54 @@ describe('repriceCheckout', () => {
 
     expect(result.subtotal).toBe(50.5);
     expect(result.total).toBe(54.54);
+  });
+
+  it('charges the site its own rate, not a platform-wide one', async () => {
+    getProduct.mockResolvedValue({ id: 'p1', price: 100 });
+    siteTax(8.25);
+
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', name: 'Tee', price: 100, quantity: 1 }],
+      0
+    );
+
+    expect(getTax).toHaveBeenCalledWith(db, SITE);
+    expect(result.taxRate).toBe(0.0825);
+    expect(result.tax).toBe(8.25);
+    expect(result.total).toBe(108.25);
+  });
+
+  it('charges no tax when the site has not enabled calculations', async () => {
+    getProduct.mockResolvedValue({ id: 'p1', price: 100 });
+    siteTax(null);
+
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', name: 'Tee', price: 100, quantity: 1 }],
+      15
+    );
+
+    expect(result.taxRate).toBe(0);
+    expect(result.tax).toBe(0);
+    expect(result.total).toBe(115);
+  });
+
+  it('ignores a rate the site left at zero even with calculations on', async () => {
+    getProduct.mockResolvedValue({ id: 'p1', price: 100 });
+    siteTax(0);
+
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', name: 'Tee', price: 100, quantity: 1 }],
+      0
+    );
+
+    expect(result.tax).toBe(0);
+    expect(result.total).toBe(100);
   });
 
   it('preserves non-price fields on the item it returns', async () => {
