@@ -95,11 +95,7 @@
 </script>
 
 <svelte:head>
-  <title
-    >{page
-      ? page.title
-      : `${data.storeName || 'Hermes eCommerce'} - ${$t('home.titleSuffix')}`}</title
-  >
+  <title>{page ? page.title : `${data.storeName || 'Ammoura'} - ${$t('home.titleSuffix')}`}</title>
   <meta name="description" content={$t('home.metaDescription')} />
 </svelte:head>
 
@@ -212,7 +208,7 @@
 
   <section class="pricing" id="pricing">
     <div class="section-header">
-      <h2>🚀 {$t('home.pricingTitle', { storeName: data.storeName || 'Hermes eCommerce' })}</h2>
+      <h2>🚀 {$t('home.pricingTitle', { storeName: data.storeName || 'Ammoura' })}</h2>
       <p class="pricing-tagline">{$t('home.pricingTagline')}</p>
       <p class="pricing-subtitle">{$t('home.pricingSubtitle')}</p>
     </div>

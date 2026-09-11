@@ -91,8 +91,8 @@
 </script>
 
 <svelte:head>
-  <title>{$t('auth.login')} - {data.storeName || 'Hermes eCommerce'}</title>
-  <meta name="description" content="Login to {data.storeName || 'Hermes eCommerce'} Platform" />
+  <title>{$t('auth.login')} - {data.storeName || 'Ammoura'}</title>
+  <meta name="description" content="Login to {data.storeName || 'Ammoura'} Platform" />
 </svelte:head>
 
 <div class="login-container">

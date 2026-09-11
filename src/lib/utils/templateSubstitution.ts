@@ -69,7 +69,7 @@ export function createSiteContext(settings: GeneralSettings): SiteContext {
  */
 export function createDefaultSiteContext(): SiteContext {
   return {
-    name: 'Hermes eCommerce',
+    name: 'Ammoura',
     tagline: '',
     description: '',
     email: '',

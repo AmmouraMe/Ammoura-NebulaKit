@@ -85,7 +85,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       userColorScheme: null,
       currentUser: locals.currentUser || null,
       currentAccount: locals.account || null,
-      storeName: 'Hermes eCommerce',
+      storeName: 'Ammoura',
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
       currency: 'USD',
@@ -189,7 +189,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
             if (component.type === 'navbar') {
               // Use site title from settings if logo text is default
               if (config.logo && config.logo.text === 'Store') {
-                config.logo.text = generalSettings.storeName || 'Hermes eCommerce';
+                config.logo.text = generalSettings.storeName || 'Ammoura';
               }
               layoutData.navbar = { type: 'navbar', config, position: widgetPosition };
             } else if (component.type === 'footer') {
@@ -214,7 +214,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
           if (widget.type === 'navbar') {
             // Use site title from settings if logo text is default
             if (config.logo && config.logo.text === 'Store') {
-              config.logo.text = generalSettings.storeName || 'Hermes eCommerce';
+              config.logo.text = generalSettings.storeName || 'Ammoura';
             }
             layoutData.navbar = { type: 'navbar', config, position: widgetPosition };
           } else if (widget.type === 'footer') {
@@ -231,11 +231,8 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
         // Use the component's config (cast to WidgetConfig for type safety)
         const config: WidgetConfig = { ...navbarComponent.config };
         // Update site title if logo text is default
-        if (
-          config.logo &&
-          (config.logo.text === 'Store' || config.logo.text === 'Hermes eCommerce')
-        ) {
-          config.logo.text = generalSettings.storeName || 'Hermes eCommerce';
+        if (config.logo && (config.logo.text === 'Store' || config.logo.text === 'Ammoura')) {
+          config.logo.text = generalSettings.storeName || 'Ammoura';
         }
         layoutData.navbar = { type: 'navbar', config };
       } else {
@@ -244,7 +241,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
           ...defaultNavbarConfig,
           logo: {
             ...defaultNavbarConfig.logo,
-            text: generalSettings.storeName || 'Hermes eCommerce'
+            text: generalSettings.storeName || 'Ammoura'
           }
         };
         layoutData.navbar = { type: 'navbar', config: navbarWithStoreName };
@@ -259,7 +256,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       userColorScheme: userPrefs?.color_scheme || null,
       currentUser: locals.currentUser || null,
       currentAccount: locals.account || null,
-      storeName: generalSettings.storeName || 'Hermes eCommerce',
+      storeName: generalSettings.storeName || 'Ammoura',
       siteContext: createSiteContext(generalSettings),
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
@@ -276,7 +273,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       userColorScheme: null,
       currentUser: locals.currentUser || null,
       currentAccount: locals.account || null,
-      storeName: 'Hermes eCommerce',
+      storeName: 'Ammoura',
       siteContext: createDefaultSiteContext(),
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },

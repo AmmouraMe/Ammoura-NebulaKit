@@ -245,7 +245,7 @@ describe('Template Substitution', () => {
     it('should create default site context', () => {
       const context = createDefaultSiteContext();
 
-      expect(context.name).toBe('Hermes eCommerce');
+      expect(context.name).toBe('Ammoura');
       expect(context.tagline).toBe('');
       expect(context.description).toBe('');
       expect(context.email).toBe('');

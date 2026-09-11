@@ -146,7 +146,7 @@ describe('+layout.server load function', () => {
       expect(result.themeColorsDark).toBeNull();
       expect(result.userColorScheme).toBeNull();
       expect(result.currentUser).toBeNull();
-      expect(result.storeName).toBe('Hermes eCommerce');
+      expect(result.storeName).toBe('Ammoura');
       expect(result.layoutData).toBeDefined();
       expect(result.layoutData.navbar).toBeDefined();
       expect(result.layoutData.navbar?.type).toBe('navbar');
@@ -639,7 +639,7 @@ describe('+layout.server load function', () => {
 
       expect(result.themeColorsLight).toBeNull();
       expect(result.themeColorsDark).toBeNull();
-      expect(result.storeName).toBe('Hermes eCommerce');
+      expect(result.storeName).toBe('Ammoura');
       expect(result.layoutData.navbar).toBeDefined();
     });
   });

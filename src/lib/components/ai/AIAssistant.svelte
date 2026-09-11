@@ -241,7 +241,7 @@
     <div class="header-title">
       <Sparkles size={18} />
       <div>
-        <h3>Hermes AI</h3>
+        <h3>Ammoura AI</h3>
         <p class="context-type">{contextInfo.type.replace(/_/g, ' ')}</p>
       </div>
     </div>
@@ -256,7 +256,7 @@
         <div class="welcome-icon">
           <Sparkles size={48} />
         </div>
-        <h4>Welcome to Hermes AI</h4>
+        <h4>Welcome to Ammoura AI</h4>
         <p>I can help you with:</p>
         <ul class="capabilities-list">
           {#each contextInfo.capabilities as capability}

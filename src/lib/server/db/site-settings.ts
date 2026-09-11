@@ -238,7 +238,7 @@ export async function getGeneralSettings(db: D1Database, siteId: string): Promis
   const settingsMap = new Map(settings.map((s) => [s.setting_key, s.setting_value]));
 
   return {
-    storeName: settingsMap.get('general_store_name') || 'Hermes eCommerce',
+    storeName: settingsMap.get('general_store_name') || 'Ammoura',
     tagline: settingsMap.get('general_tagline') || '',
     description: settingsMap.get('general_description') || '',
     storeEmail: settingsMap.get('general_store_email') || '',
