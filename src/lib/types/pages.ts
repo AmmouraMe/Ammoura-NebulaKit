@@ -27,6 +27,7 @@ export type ComponentType =
   | 'navbar'
   | 'footer'
   | 'theme_toggle' // Light/dark theme toggle button
+  | 'scene' // Generative ambient backdrop (starfield, aurora, grid)
   | 'yield' // Special component type for layouts - renders page content
   | 'container' // Container with padding and background
   | 'composite' // Multi-part component composition
@@ -544,6 +545,14 @@ export interface ComponentConfig {
 
   // Theme toggle component
   toggleVariant?: 'icon' | 'icon-label' | 'button';
+
+  // Scene component — a generative ambient backdrop. See $lib/utils/scene.ts.
+  sceneVariant?: 'stars' | 'aurora' | 'grid';
+  sceneDensity?: number; // 0..100, 50 is the designed density
+  sceneSpeed?: number; // 0..100, 50 is the designed speed
+  scenePointerParallax?: boolean; // Default true; ignored under reduced motion
+  sceneColors?: string[]; // Theme refs or hexes; the scene picks from the list
+  sceneHeight?: string; // CSS length; the box the scene fills
 
   // Features component
   features?: Array<{

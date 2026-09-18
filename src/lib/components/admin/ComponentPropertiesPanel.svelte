@@ -1207,6 +1207,79 @@
               </label>
             </div>
           </div>
+        {:else if component.type === 'scene'}
+          <div class="section">
+            <h4>Backdrop</h4>
+            <div class="form-group">
+              <label>
+                <span>Variant</span>
+                <select bind:value={config.sceneVariant} on:change={handleImmediateUpdate}>
+                  <option value="stars">Starfield</option>
+                  <option value="aurora">Aurora</option>
+                  <option value="grid">Perspective grid</option>
+                </select>
+              </label>
+              <p class="field-hint">
+                Drawn from the theme's own colours, so it restyles with the site rather than pinning
+                a palette into the page. Put content inside this component to sit it over the
+                backdrop.
+              </p>
+            </div>
+            <div class="form-group">
+              <label>
+                <span>Height</span>
+                <input
+                  type="text"
+                  bind:value={config.sceneHeight}
+                  on:input={handleImmediateUpdate}
+                  placeholder="420px"
+                />
+              </label>
+              <p class="field-hint">Any CSS length — 420px, 60vh, 100dvh.</p>
+            </div>
+            <div class="form-group">
+              <label>
+                <span>Density ({config.sceneDensity ?? 50})</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  bind:value={config.sceneDensity}
+                  on:input={handleImmediateUpdate}
+                />
+              </label>
+            </div>
+            <div class="form-group">
+              <label>
+                <span>Speed ({config.sceneSpeed ?? 50})</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  bind:value={config.sceneSpeed}
+                  on:input={handleImmediateUpdate}
+                />
+              </label>
+              <p class="field-hint">
+                Halfway along each slider is the designed value. The scene holds still for a visitor
+                who has asked for reduced motion, whatever these say.
+              </p>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  bind:checked={config.scenePointerParallax}
+                  on:change={handleImmediateUpdate}
+                />
+                <span>Follow the pointer</span>
+              </label>
+              <p class="field-hint">
+                The backdrop drifts a little with the cursor. It has no effect on a touch screen,
+                and none under reduced motion.
+              </p>
+            </div>
+          </div>
         {:else if component.type === 'divider'}
           <p class="tab-info">All divider settings are in the Style tab.</p>
         {:else if component.type === 'single_product'}

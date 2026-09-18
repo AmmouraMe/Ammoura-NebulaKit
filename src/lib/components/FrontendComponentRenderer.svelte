@@ -50,6 +50,7 @@
   import DropdownComponent from '$lib/components/builtin/Dropdown.svelte';
   import ThemeToggleComponent from '$lib/components/builtin/ThemeToggle.svelte';
   import MobileCollapseToggle from '$lib/components/builtin/MobileCollapseToggle.svelte';
+  import SceneComponent from '$lib/components/builtin/Scene.svelte';
   import {
     getMobileCollapseLabel,
     isContainerType,
@@ -878,6 +879,18 @@
       </div>
     {:else}
       <ThemeToggleComponent {config} />
+    {/if}
+  {:else if type === 'scene'}
+    {#if needsPositionWrapper}
+      <div class="position-wrapper" style="{positionStyle} {advancedStyles}">
+        <SceneComponent {config} {colorTheme} />
+      </div>
+    {:else if advancedStyles}
+      <div class="advanced-wrapper" style={advancedStyles}>
+        <SceneComponent {config} {colorTheme} />
+      </div>
+    {:else}
+      <SceneComponent {config} {colorTheme} />
     {/if}
   {:else}
     <!-- Unknown component type - render as placeholder -->

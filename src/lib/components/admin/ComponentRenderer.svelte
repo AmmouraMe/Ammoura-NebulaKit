@@ -25,6 +25,7 @@
   import IconComponent from '$lib/components/builtin/Icon.svelte';
   import SpacerComponent from '$lib/components/builtin/Spacer.svelte';
   import DividerComponent from '$lib/components/builtin/Divider.svelte';
+  import SceneComponent from '$lib/components/builtin/Scene.svelte';
   import PricingComponent from '$lib/components/builtin/Pricing.svelte';
 
   export let component: PageComponent;
@@ -759,6 +760,12 @@
     </div>
   {:else if component.type === 'spacer'}
     <SpacerComponent config={component.config} />
+  {:else if component.type === 'scene'}
+    <!-- The real component, not a still of it: a backdrop chosen against a
+         placeholder rectangle is a backdrop chosen blind. It pauses itself when
+         it scrolls out of the canvas, so an unattended builder tab is not
+         painting a starfield nobody is looking at. -->
+    <SceneComponent config={component.config} {colorTheme} />
   {:else if component.type === 'theme_toggle'}
     {@const toggleSize = component.config.size || 'medium'}
     {@const toggleVariant = component.config.toggleVariant || 'icon'}

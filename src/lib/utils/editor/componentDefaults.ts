@@ -492,6 +492,19 @@ export function getDefaultConfig(type: ComponentType): ComponentConfig {
         backgroundColor: 'transparent'
       };
 
+    case 'scene':
+      // Starfield by default: it is the variant that reads as intentional on any
+      // palette, where aurora depends on the theme's colours being worth seeing
+      // and grid announces a genre.
+      return {
+        sceneVariant: 'stars',
+        sceneDensity: 50,
+        sceneSpeed: 50,
+        scenePointerParallax: true,
+        sceneHeight: '420px',
+        backgroundColor: 'theme:background'
+      };
+
     case 'columns':
       return {
         columnCount: { desktop: 2, tablet: 2, mobile: 1 },
@@ -1941,6 +1954,7 @@ export function getComponentLabel(type: ComponentType): string {
     dropdown: 'Dropdown',
     spacer: 'Spacer',
     divider: 'Divider',
+    scene: 'Scene',
     columns: 'Columns',
     single_product: 'Single Product',
     product_list: 'Product List',
