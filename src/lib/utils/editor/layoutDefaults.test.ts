@@ -93,11 +93,18 @@ describe('layoutDefaults', () => {
   });
 
   describe('BUILTIN_LAYOUTS', () => {
-    it('should contain exactly one layout definition', () => {
-      expect(BUILTIN_LAYOUTS).toHaveLength(1);
+    it('offers the default layout and the minimal one', () => {
+      // `minimal` was enabled for the coming-soon holding page, which must not
+      // wear the site's navbar and footer: while the gate is up every link in
+      // them answers 503.
+      expect(BUILTIN_LAYOUTS.map((layout) => layout.slug)).toEqual(['default', 'minimal']);
     });
 
-    it('should have default layout as the only entry', () => {
+    it('has exactly one default, or a new site does not know what to use', () => {
+      expect(BUILTIN_LAYOUTS.filter((layout) => layout.isDefault)).toHaveLength(1);
+    });
+
+    it('keeps the default layout first and unchanged', () => {
       expect(BUILTIN_LAYOUTS[0].slug).toBe('default');
       expect(BUILTIN_LAYOUTS[0].name).toBe('Default Layout');
       expect(BUILTIN_LAYOUTS[0].isDefault).toBe(true);
@@ -107,6 +114,13 @@ describe('layoutDefaults', () => {
       const result = BUILTIN_LAYOUTS[0].getWidgets();
       const expected = getDefaultLayoutWidgets();
       expect(result).toEqual(expected);
+    });
+
+    it('gives the minimal layout nothing but a yield', () => {
+      // A navbar or footer creeping in here would silently put the site's
+      // chrome back on the holding page.
+      const widgets = getBuiltinLayoutWidgets('minimal');
+      expect(widgets?.map((widget) => widget.type)).toEqual(['yield']);
     });
   });
 

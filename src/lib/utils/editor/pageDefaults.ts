@@ -27,6 +27,16 @@ export interface BuiltinPageDefinition {
   title: string;
   slug: string;
   description?: string;
+  /**
+   * A built-in layout slug this page must use instead of the site's default.
+   *
+   * Only set it where the default layout would be WRONG, not merely different —
+   * the holding page is the case it exists for, because the navbar and footer it
+   * would otherwise inherit are full of links that answer 503 while the gate is
+   * up. Everything else follows the site's default so a tenant's own layout
+   * edits reach it.
+   */
+  layoutSlug?: string;
   getWidgets: () => WidgetDefinition[];
 }
 
@@ -1582,7 +1592,11 @@ export function getComingSoonPageWidgets(): WidgetDefinition[] {
               containerFlexDirection: { desktop: 'column', tablet: 'column', mobile: 'column' },
               containerAlignItems: 'center',
               containerJustifyContent: 'center',
-              containerMinHeight: { desktop: '100dvh', tablet: '100dvh', mobile: '100dvh' },
+              // 100% of the scene, not 100dvh. Both asking for a viewport meant
+              // the container was taller than the box it centred itself in, so
+              // its content overflowed in BOTH directions and the heading was
+              // clipped off the top, unreachable.
+              containerMinHeight: { desktop: '100%', tablet: '100%', mobile: '100%' },
               containerGap: { desktop: 20, tablet: 18, mobile: 16 },
               // The container staggers its children rather than each child
               // carrying its own delay: one number here, and the name, the line
@@ -1657,6 +1671,7 @@ export const BUILTIN_PAGES: BuiltinPageDefinition[] = [
     id: 'builtin-coming-soon-page',
     title: 'Coming Soon',
     slug: '/coming-soon',
+    layoutSlug: 'minimal',
     description:
       'The holding page served while the coming-soon gate is on. Built from ordinary builder components so the owner can rewrite it.',
     getWidgets: getComingSoonPageWidgets

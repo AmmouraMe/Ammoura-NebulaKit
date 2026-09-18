@@ -672,4 +672,74 @@ describe('builtin-seeding', () => {
       expect(results.length).toBe(2 * BUILTIN_PAGES.length);
     });
   });
+
+  describe('a built-in page that declares a layout', () => {
+    /**
+     * The holding page is the reason `layoutSlug` exists: while the coming-soon
+     * gate is up, every link in the site's navbar and footer answers 503, so a
+     * holding page wearing them is a page of dead ends.
+     */
+    it('is the only built-in page that asks for one, and asks for minimal', () => {
+      const withLayout = BUILTIN_PAGES.filter((page) => page.layoutSlug);
+      expect(withLayout.map((page) => [page.slug, page.layoutSlug])).toEqual([
+        ['/coming-soon', 'minimal']
+      ]);
+    });
+
+    it('names a layout that actually exists', () => {
+      // A slug with no matching definition silently leaves the page on the
+      // site's default, which is exactly the outcome it was set to avoid.
+      for (const page of BUILTIN_PAGES.filter((p) => p.layoutSlug)) {
+        expect(BUILTIN_LAYOUTS.some((layout) => layout.slug === page.layoutSlug)).toBe(true);
+      }
+    });
+
+    it('points the new page at that layout', async () => {
+      const statements: string[] = [];
+      const binds: unknown[][] = [];
+      const mockPrepare = vi.fn((sql: string) => {
+        statements.push(sql);
+        return {
+          bind: vi.fn((...args: unknown[]) => {
+            binds.push(args);
+            return {
+              // No existing page, no existing layout: the create path.
+              first: vi.fn().mockResolvedValue(sql.includes('FROM layouts') ? { id: 7 } : null),
+              run: vi.fn().mockResolvedValue({ meta: { last_row_id: 7 } }),
+              all: vi.fn().mockResolvedValue({ results: [] })
+            };
+          })
+        };
+      });
+      mockDb.prepare = mockPrepare as never;
+
+      const definition = BUILTIN_PAGES.find((page) => page.slug === '/coming-soon');
+      await seedBuiltinPage(mockDb, testSiteId, definition!, 1);
+
+      const update = statements.find((sql) => sql.includes('UPDATE pages SET layout_id'));
+      expect(update).toBeDefined();
+      // The layout id the lookup returned, the page, and the site — in that order.
+      expect(binds.some((args) => args[0] === 7 && args[2] === testSiteId)).toBe(true);
+    });
+
+    it('does not run the layout update for a page that declares none', async () => {
+      const statements: string[] = [];
+      const mockPrepare = vi.fn((sql: string) => {
+        statements.push(sql);
+        return {
+          bind: vi.fn(() => ({
+            first: vi.fn().mockResolvedValue(null),
+            run: vi.fn().mockResolvedValue({ meta: { last_row_id: 1 } }),
+            all: vi.fn().mockResolvedValue({ results: [] })
+          }))
+        };
+      });
+      mockDb.prepare = mockPrepare as never;
+
+      const definition = BUILTIN_PAGES.find((page) => page.slug === '/privacy-policy');
+      await seedBuiltinPage(mockDb, testSiteId, definition!, 1);
+
+      expect(statements.some((sql) => sql.includes('UPDATE pages SET layout_id'))).toBe(false);
+    });
+  });
 });

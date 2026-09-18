@@ -17,7 +17,20 @@
   $: label = siteContext
     ? substituteTemplate(rawLabel, { site: siteContext, user: userContext })
     : rawLabel;
-  $: url = config.url || '#';
+  /**
+   * The URL is substituted as well as the label.
+   *
+   * `${site.email}` and `${site.name}` are documented placeholders, and a link
+   * is exactly where you want the first of them — `mailto:${site.email}` is the
+   * obvious "contact us" button. Only the label was substituted before, so that
+   * button shipped with a literal `${site.email}` in its href: a broken link,
+   * and on a holding page it is the only link there is.
+   */
+  $: rawUrl = config.url || '#';
+  $: url =
+    siteContext && rawUrl.includes('${')
+      ? substituteTemplate(rawUrl, { site: siteContext, user: userContext })
+      : rawUrl;
   $: variant = config.variant || 'primary';
   $: size = config.size || 'medium';
   $: fullWidth = config.fullWidth || false;

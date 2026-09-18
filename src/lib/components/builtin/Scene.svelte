@@ -64,9 +64,17 @@
    * Colours come through the theme resolver like every other colour in the
    * builder, so a scene restyles with the site instead of pinning hexes into a
    * page that later changes palette.
+   *
+   * The default list is theme references ONLY. It used to end in a literal
+   * `#ffffff`, which looks like a sensible "starlight" until the site is on a
+   * light theme — white stars on a near-white background are no stars at all.
+   * A hardcoded hex in a default is a hex that will eventually be invisible
+   * against a palette nobody has chosen yet.
    */
   $: colors = (
-    config.sceneColors?.length ? config.sceneColors : ['theme:primary', 'theme:accent', '#ffffff']
+    config.sceneColors?.length
+      ? config.sceneColors
+      : ['theme:primary', 'theme:accent', 'theme:secondary']
   ).map((c) => resolveThemeColor(c, colorTheme, '#ffffff', true));
 
   let host: HTMLDivElement;
@@ -269,7 +277,13 @@
   .scene {
     position: relative;
     width: 100%;
-    overflow: hidden;
+    /* NOT overflow: hidden. The scene centres its content, so content taller
+       than the box overflows in BOTH directions — the clip then cuts the top
+       half off and puts it somewhere nobody can scroll to. The canvas is
+       absolutely positioned and sized to this box, so it cannot paint outside
+       it anyway: the clip was buying nothing and costing the heading. Content
+       that does not fit now scrolls, which is a failure anyone can recover
+       from. (Same bug, same fix, as the ammoura.me teaser hero.) */
   }
 
   canvas {
