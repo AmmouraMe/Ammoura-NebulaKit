@@ -17,6 +17,7 @@
   import TailwindContainerEditor from '../builder/TailwindContainerEditor.svelte';
   import ChildLayoutEditor from '../builder/ChildLayoutEditor.svelte';
   import UniversalStyleEditor from '../builder/UniversalStyleEditor.svelte';
+  import MotionEditor from '../builder/MotionEditor.svelte';
   import ToggleSwitch from '../ToggleSwitch.svelte';
   import { GripVertical, Trash2 } from 'lucide-svelte';
   import { getThemeColors } from '$lib/utils/editor/colorThemes';
@@ -26,6 +27,17 @@
   export let colorTheme: ColorTheme = 'default';
   export let colorThemes: ColorThemeDefinition[] = [];
   export let onUpdate: (config: ComponentConfig) => void;
+
+  /**
+   * Motion edits come back as an event rather than a binding, and the handler
+   * lives here rather than inline in the template: `CustomEvent<ComponentConfig>`
+   * written as an inline annotation is parsed as markup at the first angle
+   * bracket.
+   */
+  function handleMotionUpdate(event: CustomEvent<ComponentConfig>): void {
+    config = event.detail;
+    handleImmediateUpdate();
+  }
   export let onDeleteChild: ((childId: string) => void) | undefined = undefined;
   // Context from parent - when this component is a child of a container
   export let parentDisplayMode: 'flex' | 'grid' | 'block' | undefined = undefined;
@@ -3195,6 +3207,16 @@
             />
           </div>
         {/if}
+
+        <!-- Motion. Above visibility because it is the one people come to this
+             tab looking for; visibility is a rule you set once. -->
+        <div class="section motion-section">
+          <h4>Motion</h4>
+          <p class="section-description">
+            How this component arrives and how it behaves as the page scrolls.
+          </p>
+          <MotionEditor {config} componentType={component.type} on:update={handleMotionUpdate} />
+        </div>
 
         <div class="section visibility-section">
           <h4>Visibility Controls</h4>
