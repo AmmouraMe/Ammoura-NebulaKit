@@ -67,6 +67,8 @@
     ComponentConfig
   } from '$lib/types/pages';
   import { responsiveStyle, type ResponsiveStyleProps } from '$lib/utils/responsiveStyle';
+  import MotionBox from '$lib/components/MotionBox.svelte';
+  import { resolveMotion } from '$lib/utils/motion';
 
   // Props
   export let type: string;
@@ -537,6 +539,13 @@
       type === 'pricing') &&
     children.length > 0;
 
+  /**
+   * A container may stagger its children's reveals. The delay is the child's
+   * own, plus its index times this — so the second card starts a beat after the
+   * first without anyone editing per-card delays by hand.
+   */
+  $: childStagger = resolveMotion(config.motion)?.stagger ?? 0;
+
   // Generate inline theme styles for CSS variables (same as admin builder)
   $: themeColors = getThemeColors(colorTheme);
   $: _themeStyles = generateThemeStyles(themeColors);
@@ -565,7 +574,7 @@
         <div class="hero-overlay" style="opacity: {(config.overlayOpacity ?? 50) / 100}" />
       {/if}
       {#each children as child, i (child.id || i)}
-        <div
+        <MotionBox
           class="child-wrapper"
           style={getChildLayoutStyles(
             child.config || {},
@@ -573,6 +582,10 @@
             containerFlexDirection,
             containerAlignItems
           )}
+          motion={child.config?.motion}
+          ambient={child.config?.ambient}
+          scrollEffect={child.config?.scrollEffect}
+          delayOffset={childStagger * i}
         >
           <svelte:self
             type={child.type}
@@ -582,7 +595,7 @@
             {user}
             insideNavbar={type === 'navbar'}
           />
-        </div>
+        </MotionBox>
       {/each}
     </div>
   {:else if isContainer}
@@ -617,7 +630,7 @@
           class:mobile-collapse-hidden={hasMobileCollapse && !mobileCollapseExpanded}
         >
           {#each children as child, i (child.id || i)}
-            <div
+            <MotionBox
               class="child-wrapper"
               style={getChildLayoutStyles(
                 child.config || {},
@@ -625,6 +638,10 @@
                 containerFlexDirection,
                 containerAlignItems
               )}
+              motion={child.config?.motion}
+              ambient={child.config?.ambient}
+              scrollEffect={child.config?.scrollEffect}
+              delayOffset={childStagger * i}
             >
               <svelte:self
                 type={child.type}
@@ -634,7 +651,7 @@
                 {user}
                 {insideNavbar}
               />
-            </div>
+            </MotionBox>
           {/each}
         </div>
       {/if}
@@ -894,7 +911,9 @@
     box-sizing: border-box;
   }
 
-  .child-wrapper {
+  /* `:global` because .child-wrapper is now emitted by MotionBox — a scoped rule
+     only survives for elements Svelte can see in this file's own markup. */
+  :global(.child-wrapper) {
     box-sizing: border-box;
   }
 
@@ -910,7 +929,7 @@
     pointer-events: none;
   }
 
-  .has-overlay > .child-wrapper {
+  .has-overlay > :global(.child-wrapper) {
     position: relative;
     z-index: 1;
   }

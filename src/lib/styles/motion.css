@@ -1,0 +1,182 @@
+/**
+ * motion.css — the global `.motion` class consumed by motionStyle()
+ * (src/lib/utils/motion.ts). Sibling of responsive.css.
+ *
+ * A component emits scoped `--motion-*` custom properties inline; this file
+ * turns them into a reveal, a looping ambient animation, or scroll parallax.
+ *
+ * ## The engine gate
+ *
+ * EVERY rule that can hide, move or animate anything is nested under
+ * `:root[data-motion-engine='on']`. That attribute is set by an inline script in
+ * app.html, and only when scripting is available and the visitor has not asked
+ * for reduced motion. Without it this file changes nothing at all, which is the
+ * guarantee that a reveal can never leave content stranded at `opacity: 0`.
+ *
+ * ## Which property belongs to which effect
+ *
+ * The three effects can all be on one element, so they are kept on properties
+ * that compose instead of overwrite:
+ *
+ * | effect   | properties it owns                    |
+ * |----------|---------------------------------------|
+ * | reveal   | `opacity`, `transform`, `filter`      |
+ * | parallax | `translate` (the independent property) |
+ * | ambient  | whatever its keyframes declare        |
+ *
+ * `translate` and `transform` are separate properties in CSS and compose
+ * cleanly, so parallax can drift an element that a reveal is also settling.
+ * Ambient is the one that would genuinely collide — its keyframes usually want
+ * `transform` too — so it is held off until the reveal has finished, by an
+ * animation-delay that motionStyle() has already added the reveal's duration to,
+ * and by dropping `animation-name` entirely while the reveal is pending.
+ */
+
+/* Parallax. Mirrors parallaxOffset() in motion.ts: the offset is centred on
+   progress 0.5, so an element in the middle of the screen sits exactly where
+   layout put it. `1vh` supplies the viewport height the TS version is passed. */
+:root[data-motion-engine='on'] .motion {
+  translate: 0 calc((var(--scroll-progress, 0.5) - 0.5) * var(--scroll-parallax, 0) * 1vh);
+}
+
+/* Ambient loop. `animation-fill-mode` is left at `none` on purpose: with the
+   delay that holds it back until after a reveal, a `backwards` fill would apply
+   the keyframe-0 transform during that delay and undo the reveal it is waiting
+   for. */
+:root[data-motion-engine='on'] .motion {
+  animation-name: var(--motion-ambient-name, none);
+  animation-duration: var(--motion-ambient-duration, 0ms);
+  animation-timing-function: var(--motion-ambient-easing, ease-in-out);
+  animation-delay: var(--motion-ambient-delay, 0ms);
+  animation-iteration-count: var(--motion-ambient-iterations, infinite);
+  animation-direction: var(--motion-ambient-direction, alternate);
+}
+
+/* Reveal, before it fires. */
+:root[data-motion-engine='on'] .motion[data-motion='pending'] {
+  opacity: var(--motion-from-opacity, 1);
+  transform: var(--motion-from-transform, none);
+  filter: var(--motion-from-filter, none);
+  /* See the note above: nothing ambient may touch the element until it lands. */
+  animation-name: none;
+}
+
+/* Reveal, settling. The transition lives on the destination state, so it runs
+   on the way in and never on the way back to pending (a replayed reveal snaps
+   back invisibly and fades in again, rather than fading out first). */
+:root[data-motion-engine='on'] .motion[data-motion='in'] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  transition:
+    opacity var(--motion-duration, 600ms) var(--motion-easing, ease-out) var(--motion-delay, 0ms),
+    transform var(--motion-duration, 600ms) var(--motion-easing, ease-out) var(--motion-delay, 0ms),
+    filter var(--motion-duration, 600ms) var(--motion-easing, ease-out) var(--motion-delay, 0ms);
+}
+
+/* --- ambient keyframes ---------------------------------------------------- *
+ *
+ * `ammoura-` prefixed so a tenant's own CSS can never shadow one. `--motion-
+ * ambient-distance` is the single knob the travelling ones read, so the builder
+ * shows one "distance" field whatever preset is chosen.
+ *
+ * Most run with `animation-direction: alternate`, so each is written as a
+ * one-way move from rest and the browser plays it back: half the keyframes, and
+ * no jump at the loop point, which is what makes a hand-written `0%/50%/100%`
+ * float look mechanical. resolveAmbient() decides the direction and emits it.
+ */
+
+/* A slow vertical hover. */
+@keyframes ammoura-float {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, calc(var(--motion-ambient-distance, 10px) * -1), 0);
+  }
+}
+
+/* Sideways drift, for background art rather than for content. */
+@keyframes ammoura-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--motion-ambient-distance, 10px), 0, 0);
+  }
+}
+
+/* Attention without movement: for a badge or a live dot. */
+@keyframes ammoura-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* A scale so slight it reads as the thing being alive rather than animated.
+   Distance is in px and the element's own size is unknown here, so it is
+   converted to a fraction against a nominal 400px box and capped well short of
+   anything that would blur text. */
+@keyframes ammoura-breathe {
+  from {
+    scale: 1;
+  }
+  to {
+    scale: calc(1 + min(var(--motion-ambient-distance, 10px) / 400, 0.06));
+  }
+}
+
+/* A highlight travelling across a gradient. The element must set its own
+   `background-image` (a gradient) and `background-size` larger than itself —
+   a text component with a gradient fill is the usual case. */
+@keyframes ammoura-sheen {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+/* Continuous rotation. The one preset that must not alternate — a spinner that
+   reverses is a pendulum — so resolveAmbient() gives it `normal` and `linear`
+   rather than this file second-guessing it from the emitted variables. */
+@keyframes ammoura-spin {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Fading in and out at a lazy pace, for a field of small decorative marks. */
+@keyframes ammoura-twinkle {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion is already handled by the engine gate — the attribute is never
+   set — but tokens.css also carries a global `prefers-reduced-motion` block that
+   collapses every animation and transition on the page. This rule is the third
+   line of the same defence, and the one that survives someone later deciding to
+   set the engine attribute unconditionally. */
+@media (prefers-reduced-motion: reduce) {
+  .motion,
+  .motion[data-motion='pending'],
+  .motion[data-motion='in'] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    translate: none !important;
+    animation-name: none !important;
+    transition: none !important;
+  }
+}

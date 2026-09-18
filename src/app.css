@@ -6,6 +6,9 @@
 /* Responsive layout: the global .responsive class consumed by responsiveStyle() */
 @import './lib/styles/responsive.css';
 
+/* Motion: the global .motion class consumed by motionStyle() */
+@import './lib/styles/motion.css';
+
 /* CSS Custom Properties - Theme System */
 /* NOTE: Theme colors (primary, secondary, backgrounds, text, borders) are now */
 /* dynamically loaded from the database via +layout.server.ts */
