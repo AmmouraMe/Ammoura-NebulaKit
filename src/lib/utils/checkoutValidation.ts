@@ -4,6 +4,7 @@ import type {
   PaymentMethod,
   CheckoutValidationErrors
 } from '../types/checkout';
+import { toCountryCode } from '$lib/data/countries';
 
 export function validateShippingAddress(
   address: ShippingAddress
@@ -42,8 +43,10 @@ export function validateShippingAddress(
     errors.zipCode = 'Please enter a valid ZIP code';
   }
 
-  if (!address.country || address.country.trim().length < 2) {
-    errors.country = 'Please enter a valid country';
+  // A country we cannot resolve to an ISO-2 code cannot be shipped to, so it
+  // is refused here rather than at the fulfilment relay, after payment.
+  if (!address.country || !toCountryCode(address.country)) {
+    errors.country = 'Please choose a country';
   }
 
   return errors;
@@ -78,8 +81,10 @@ export function validateBillingAddress(
     errors.zipCode = 'Please enter a valid ZIP code';
   }
 
-  if (!address.country || address.country.trim().length < 2) {
-    errors.country = 'Please enter a valid country';
+  // A country we cannot resolve to an ISO-2 code cannot be shipped to, so it
+  // is refused here rather than at the fulfilment relay, after payment.
+  if (!address.country || !toCountryCode(address.country)) {
+    errors.country = 'Please choose a country';
   }
 
   return errors;

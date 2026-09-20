@@ -35,6 +35,12 @@ The distinction is the whole design. It lives in
 | Shipping country with no ISO code we can send            | permanent | dead-lettered at once |
 | Anything unrecognised                                    | transient | retried with backoff  |
 
+A shipping country that resolves to no ISO-2 code is permanent because no
+number of retries will change it — a human must correct the address. Checkout
+refuses such an address before payment (`$lib/data/countries`, see
+`CHECKOUT_AND_ORDERS.md`), so this case should now only reach the relay from an
+order placed before 2026-09-20, when the form offered a literal `Other`.
+
 Unrecognised failures are transient on purpose. Retrying something hopeless
 costs a few requests. Giving up on something recoverable costs a customer the
 goods they paid for.

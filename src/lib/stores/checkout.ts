@@ -24,7 +24,7 @@ const initialFormData: CheckoutFormData = {
     city: '',
     state: '',
     zipCode: '',
-    country: 'United States'
+    country: 'US'
   },
   billingAddress: {
     firstName: '',
@@ -33,7 +33,7 @@ const initialFormData: CheckoutFormData = {
     city: '',
     state: '',
     zipCode: '',
-    country: 'United States'
+    country: 'US'
   },
   paymentMethod: {
     type: 'credit-card',

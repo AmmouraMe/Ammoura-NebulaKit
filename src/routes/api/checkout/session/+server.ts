@@ -10,6 +10,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db/connection';
 import { createOrder, setOrderStripeSession } from '$lib/server/db/orders';
+import { toCountryCode } from '$lib/data/countries';
 import {
   saveEquipmentValuesForOrderItems,
   type OrderItemEquipmentValueSubmission
@@ -87,6 +88,23 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
   if (!data.shipping_address || !data.billing_address) {
     throw error(400, 'Missing required order information');
   }
+
+  // Countries are stored as ISO-2 and nothing else. The browser is not trusted
+  // to do it: an address whose country cannot be resolved here would be taken,
+  // charged, and then stuck at the fulfilment relay with nowhere to ship to.
+  const shippingCountry = toCountryCode(data.shipping_address.country ?? '');
+  if (!shippingCountry) {
+    throw error(400, 'Shipping country is not a country we can ship to');
+  }
+  const billingCountryRaw = data.billing_address.country;
+  const billingCountry = toCountryCode(
+    typeof billingCountryRaw === 'string' ? billingCountryRaw : ''
+  );
+  if (!billingCountry) {
+    throw error(400, 'Billing country is not a country we recognise');
+  }
+  data.shipping_address = { ...data.shipping_address, country: shippingCountry };
+  data.billing_address = { ...data.billing_address, country: billingCountry };
 
   const paymentSettings = await getPaymentSettings(db, siteId, encryptionKey);
   if (!paymentSettings.stripeEnabled || !paymentSettings.stripeSecretKey) {

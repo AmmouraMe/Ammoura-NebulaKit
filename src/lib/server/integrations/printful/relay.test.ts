@@ -183,6 +183,32 @@ describe('relayPaidOrderToPrintful', () => {
       );
     });
 
+    it('relays a country the old six-option form could never have taken', async () => {
+      mockGetOrderItems.mockResolvedValue([{ variant_id: 'variant-1', quantity: 1 }]);
+      mockCreateOrderWithPrintful.mockResolvedValue({ id: 556 });
+      mockGetOrderById.mockResolvedValue({
+        ...mockOrder,
+        shipping_address: JSON.stringify({
+          firstName: 'Aiko',
+          lastName: 'Tanaka',
+          email: 'aiko@example.com',
+          address: '1-1 Chiyoda',
+          city: 'Tokyo',
+          zipCode: '100-0001',
+          country: 'JP'
+        })
+      });
+
+      const execute = await captureExecute();
+      await execute(relayRow());
+
+      expect(mockCreateOrderWithPrintful).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recipient: expect.objectContaining({ country_code: 'JP', city: 'Tokyo' })
+        })
+      );
+    });
+
     it('relays under the site and provider the relay row names', async () => {
       await relayPaidOrderToPrintful(db, siteId, orderId, encryptionKey);
 
@@ -279,6 +305,30 @@ describe('relayPaidOrderToPrintful', () => {
       const failure = await execute(relayRow()).catch((error) => error);
 
       expect((failure as RelayFailure).kind).toBe('permanent');
+      expect((failure as RelayFailure).message).toContain('Wakanda');
+      expect(mockCreateOrderWithPrintful).not.toHaveBeenCalled();
+    });
+
+    it('dead-letters the literal "Other" the old checkout form offered', async () => {
+      mockGetOrderById.mockResolvedValue({
+        ...mockOrder,
+        shipping_address: JSON.stringify({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          address: '123 Main St',
+          city: 'Anytown',
+          state: 'CA',
+          zipCode: '12345',
+          country: 'Other'
+        })
+      });
+
+      const execute = await captureExecute();
+      const failure = await execute(relayRow()).catch((error) => error);
+
+      expect((failure as RelayFailure).kind).toBe('permanent');
+      expect((failure as RelayFailure).message).toContain('Other');
       expect(mockCreateOrderWithPrintful).not.toHaveBeenCalled();
     });
 

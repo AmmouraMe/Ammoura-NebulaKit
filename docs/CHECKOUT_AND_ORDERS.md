@@ -188,6 +188,34 @@ CREATE TABLE order_items (
 );
 ```
 
+## Addresses and countries
+
+A country is stored as an **ISO 3166-1 alpha-2 code** (`US`, `GB`, `JP`) in
+every address the platform holds — the checkout's shipping and billing
+addresses, and the store's own address in admin settings. `$lib/data/countries`
+owns the list and the conversions:
+
+- `COUNTRIES` — every officially assigned ISO-2 code plus `XK` (Kosovo),
+  sorted by English name. `COMMON_COUNTRIES` is the short list a picker shows
+  above the rest.
+- `toCountryCode(value)` — an ISO-2 code for a code, a name, or one of the
+  older spellings (`USA`, `Czech Republic`, `Ivory Coast`). `null` when the
+  value names no country.
+- `countryName(code)` — the display name, or the code itself when unknown, so
+  an unexpected value shows rather than disappears.
+
+`CountrySelect.svelte` is the one picker. Do not write a second `<select>` of
+countries.
+
+**Why it is one list and not a handful of options.** The checkout form used to
+offer six countries and `Other`. `Other` is not a country: an order placed with
+it was charged, marked paid, and then stuck at the fulfilment relay, which
+cannot give Printful a country code for it. The relay dead-letters such an
+order permanently (see `FULFILLMENT_RELAY.md`), naming the country the address
+holds, and `POST /api/checkout/session` now rejects an unresolvable country
+**before** taking the money. Addresses stored before 2026-09-20 hold names
+rather than codes; `toCountryCode` still reads them.
+
 ## Multi-Tenant Isolation
 
 All order operations are **scoped by site_id**:
@@ -230,7 +258,7 @@ POST /api/orders
     "city": "Anytown",
     "state": "CA",
     "zipCode": "12345",
-    "country": "United States"
+    "country": "US"
   },
   "billing_address": {
     /* same structure as shipping_address */
