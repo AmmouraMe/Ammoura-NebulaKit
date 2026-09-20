@@ -40,8 +40,10 @@ _progress_, and "ready for review" means _done_.
   `$lib/stores/*`). Examples in `.github/copilot-instructions.md`.
 - **The dev server is usually already running on port 4236.** Do not start
   another one; use the running instance.
-- **Migrations are immutable once merged to `main`.** Add a new numbered
-  migration instead of editing an existing one.
+- **Migrations are immutable once merged to `main`, and a number is used
+  once.** Add a new numbered migration instead of editing an existing one or
+  reusing its number. `npm run check:migrations` enforces both and runs as part
+  of `npm run gate`.
 - **Every query is tenant-scoped.** Reads and writes go through `locals.siteId`;
   a tenant must never reach another tenant's data.
 - Run `npm run lint`, `npm run format` and `npm test` before marking a PR ready.

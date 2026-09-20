@@ -25,7 +25,11 @@ jobs:
     name: Lint, check and test
     runs-on: ubuntu-latest
     steps:
+      # Full history: the migration check compares against the base branch, and
+      # a shallow clone has no base branch to compare against.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v6
         with:
@@ -41,6 +45,12 @@ jobs:
 
       - name: Type and Svelte check
         run: npm run check
+
+      # Migration numbers are used once and a merged migration is never edited
+      # (CLAUDE.md, issue #77). `--base` is the PR's target branch, so this also
+      # catches a change to a migration that is already on `main`.
+      - name: Migration integrity
+        run: npm run check:migrations -- --base origin/${{ github.base_ref || github.ref_name }}
 
       # Coverage thresholds live in vitest.config.ts and fail the run on their own.
       - name: Test with coverage
