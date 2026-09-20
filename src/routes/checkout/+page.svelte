@@ -16,7 +16,10 @@
     validateShippingSelections,
     calculateTotalShippingCost
   } from '../../lib/utils/shippingGroups';
-  import { calculateOrderTax } from '$lib/checkout-pricing';
+  import { calculateOrderTax, calculateOrderTotal } from '$lib/checkout-pricing';
+  import type { PageData } from './$types';
+
+  export let data: PageData;
 
   let currentStep = 1;
   let isSubmitting = false;
@@ -66,9 +69,11 @@
     return false; // Shipping not yet determined
   })();
 
-  // Same rule the server charges with — see $lib/checkout-pricing
-  $: tax = calculateOrderTax(subtotal);
-  $: total = subtotal + shippingCost + tax;
+  // The site's own tax rule, loaded server-side and charged with the same
+  // functions the API reprices with — see $lib/checkout-pricing.
+  $: taxRule = data.taxRule;
+  $: tax = calculateOrderTax(subtotal, taxRule);
+  $: total = calculateOrderTotal(subtotal, shippingCost, tax, taxRule);
 
   // Reload shipping groups when cart items change
   $: if (cartItems.length > 0 && hasPhysicalProducts) {
@@ -351,10 +356,14 @@
               </span>
             </div>
           {/if}
-          <div class="total-row">
-            <span>{$t('checkout.tax')}:</span>
-            <span>{$money(tax)}</span>
-          </div>
+          {#if tax > 0}
+            <div class="total-row">
+              <span
+                >{taxRule.pricesIncludeTax ? $t('checkout.taxIncluded') : $t('checkout.tax')}:</span
+              >
+              <span>{$money(tax)}</span>
+            </div>
+          {/if}
           <div class="total-row final-total">
             <span>{$t('checkout.total')}:</span>
             <span>{$money(total)}</span>

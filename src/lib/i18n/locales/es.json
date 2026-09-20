@@ -51,6 +51,7 @@
   "checkout.shippingFreeLabel": "Envío (gratis)",
   "checkout.totalShipping": "Envío total",
   "checkout.tax": "Impuestos",
+  "checkout.taxIncluded": "Impuestos (incluidos)",
   "checkout.total": "Total",
   "checkout.free": "GRATIS",
   "orderSuccess.title": "Confirmación del pedido",

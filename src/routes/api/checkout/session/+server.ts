@@ -158,7 +158,10 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
       quantity: 1
     });
   }
-  if (priced.tax > 0) {
+  // A tax-inclusive store's prices already contain the tax, so `priced.tax`
+  // reports it rather than adds it. A Tax line here would charge it twice and
+  // make Stripe collect more than the order row says.
+  if (priced.tax > 0 && !priced.taxRule.pricesIncludeTax) {
     lineItems.push({
       price_data: {
         currency: 'usd',
@@ -167,6 +170,22 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
       },
       quantity: 1
     });
+  }
+
+  // The order row and the Stripe charge are built from the same numbers by two
+  // different pieces of code. When they disagree, the customer is billed one
+  // amount and the merchant's records hold another, so refuse rather than
+  // charge — this endpoint has shipped that bug before.
+  const lineItemTotalCents = lineItems.reduce(
+    (sum, line) => sum + (line.price_data?.unit_amount ?? 0) * (line.quantity ?? 1),
+    0
+  );
+  if (lineItemTotalCents !== Math.round(priced.total * 100)) {
+    console.error(
+      `Checkout totals disagree for order ${order.id}: Stripe line items sum to ` +
+        `${lineItemTotalCents} cents, order total is ${Math.round(priced.total * 100)} cents`
+    );
+    throw error(500, 'Checkout could not price this order consistently');
   }
 
   const stripe = getStripeClient(paymentSettings.stripeSecretKey);

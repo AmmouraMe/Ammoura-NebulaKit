@@ -188,6 +188,50 @@ CREATE TABLE order_items (
 );
 ```
 
+## Tax
+
+Tax is the **site's own**, not the platform's. `$lib/checkout-pricing` holds
+the money rules the storefront and the server share, and a `TaxRule` carries
+what a site charges:
+
+| Field              | From the admin tax page   | Meaning                                  |
+| ------------------ | ------------------------- | ---------------------------------------- |
+| `enabled`          | "Enable Tax Calculations" | off ⇒ no tax is charged at all           |
+| `ratePercent`      | "Default Tax Rate (%)"    | a **percent** — `8.25` is 8.25%          |
+| `pricesIncludeTax` | "Prices Include Tax"      | on ⇒ the tax is already inside the price |
+
+- `calculateOrderTax(subtotal, rule)` — adds the rate for a tax-exclusive
+  store, and **extracts** it (`subtotal - subtotal / (1 + rate)`) for a
+  tax-inclusive one.
+- `calculateOrderTotal(subtotal, shipping, tax, rule)` — adds the tax only when
+  it is not already in the subtotal, so it is never charged twice.
+- A rate that is not a finite number in `(0, 100]` is treated as no tax.
+  Charging a corrupt rate is worse than charging none.
+
+**A store with no tax settings saved charges nothing.** That is deliberate, not
+a placeholder: a store that has never opened the tax page has not said what
+jurisdiction it is in, and inventing a rate for it takes money from its
+customers on a guess. Until 2026-09-20 checkout applied a hardcoded 8% to every
+store on the platform and never read these settings at all — a UK store quoted
+US sales tax, and the admin tax page changed nothing.
+
+**The server never takes the rate from the request.** `repriceCheckout` reads
+the site's settings itself (`getCheckoutTaxRule`), for the same reason it
+re-derives every price: a number the browser sends is a number a browser can
+change. If the settings read fails, checkout charges no tax rather than a
+guessed rate. `/checkout` gets the same rule from its own `+page.server.ts`, so
+the quote on the page and the charge on the card come from one source.
+
+`POST /api/checkout/session` then checks that the Stripe line items sum to the
+order total before creating the session, and refuses if they do not — the order
+row and the Stripe charge are built by two different pieces of code, and a
+disagreement means the customer is billed one amount while the merchant's
+records hold another.
+
+**Not yet applied:** per-product tax classes (`TaxSettings.taxClasses`) and
+"Display Prices With Tax" on product pages. Every taxed line uses the site's
+default rate.
+
 ## Addresses and countries
 
 A country is stored as an **ISO 3166-1 alpha-2 code** (`US`, `GB`, `JP`) in
@@ -247,7 +291,7 @@ POST /api/orders
   ],
   "subtotal": 59.98,
   "shipping_cost": 9.99,
-  "tax": 5.6,
+  "tax": 5.6 /* ignored — re-derived from the site's tax settings */,
   "total": 75.57,
   "shipping_address": {
     "firstName": "John",
@@ -378,8 +422,8 @@ The following are tested:
 
 Potential improvements for the checkout and orders system:
 
-1. **Real Payment Integration**: Integrate with Stripe, PayPal, or other payment
-   processors
+1. ~~**Real Payment Integration**~~ — done: Stripe Checkout Sessions plus the
+   `checkout.session.completed` webhook. PayPal is still only a settings field.
 2. **Email Notifications**: Send order confirmation and status update emails
 3. **Order Tracking**: Add tracking numbers and carrier information
 4. **Refunds**: Add refund processing capabilities
