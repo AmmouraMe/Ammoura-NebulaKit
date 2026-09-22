@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>Email Settings - Hermes Admin</title>
+  <title>Email Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">

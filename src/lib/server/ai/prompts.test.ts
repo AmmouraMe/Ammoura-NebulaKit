@@ -4,7 +4,7 @@ import { PRODUCT_CREATION_SYSTEM_PROMPT, PRODUCT_EDIT_SYSTEM_PROMPT } from './pr
 describe('AI Prompts', () => {
   describe('PRODUCT_CREATION_SYSTEM_PROMPT', () => {
     it('should contain role definition', () => {
-      expect(PRODUCT_CREATION_SYSTEM_PROMPT).toContain('Hermes AI');
+      expect(PRODUCT_CREATION_SYSTEM_PROMPT).toContain('Ammoura AI');
       expect(PRODUCT_CREATION_SYSTEM_PROMPT).toContain('expert eCommerce product specialist');
     });
 
@@ -128,7 +128,7 @@ describe('AI Prompts', () => {
 
   describe('PRODUCT_EDIT_SYSTEM_PROMPT', () => {
     it('should contain role definition', () => {
-      expect(PRODUCT_EDIT_SYSTEM_PROMPT).toContain('Hermes AI');
+      expect(PRODUCT_EDIT_SYSTEM_PROMPT).toContain('Ammoura AI');
       expect(PRODUCT_EDIT_SYSTEM_PROMPT).toContain('editing an existing product');
     });
 
@@ -175,9 +175,9 @@ describe('AI Prompts', () => {
   });
 
   describe('Prompt Consistency', () => {
-    it('should both mention Hermes AI', () => {
-      expect(PRODUCT_CREATION_SYSTEM_PROMPT).toContain('Hermes AI');
-      expect(PRODUCT_EDIT_SYSTEM_PROMPT).toContain('Hermes AI');
+    it('should both mention Ammoura AI', () => {
+      expect(PRODUCT_CREATION_SYSTEM_PROMPT).toContain('Ammoura AI');
+      expect(PRODUCT_EDIT_SYSTEM_PROMPT).toContain('Ammoura AI');
     });
 
     it('should both use JSON output format', () => {

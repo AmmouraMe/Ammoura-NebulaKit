@@ -1,10 +1,10 @@
 # OAuth SSO Setup Guide
 
-This guide explains how to configure and use the multi-provider OAuth Single Sign-On (SSO) system in Hermes.
+This guide explains how to configure and use the multi-provider OAuth Single Sign-On (SSO) system in Ammoura.
 
 ## Overview
 
-Hermes supports seamless authentication through 8 major OAuth providers:
+Ammoura supports seamless authentication through 8 major OAuth providers:
 
 - 🔍 **Google** - OAuth 2.0 / OpenID Connect
 - 💼 **LinkedIn** - OAuth 2.0

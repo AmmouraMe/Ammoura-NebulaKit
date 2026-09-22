@@ -2,7 +2,7 @@
 
 ## Mobile-First Approach
 
-Hermes is built with a mobile-first responsive design philosophy. All components
+Ammoura is built with a mobile-first responsive design philosophy. All components
 and pages should be developed and tested for mobile devices first, then
 progressively enhanced for larger screens.
 

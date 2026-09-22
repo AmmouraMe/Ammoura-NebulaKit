@@ -2,7 +2,7 @@
  * System prompts for AI chat assistant
  */
 
-export const PRODUCT_CREATION_SYSTEM_PROMPT = `You are Hermes AI, an expert eCommerce product specialist integrated into the Hermes eCommerce platform. Your role is to help store admins create complete, high-quality product listings through natural conversation.
+export const PRODUCT_CREATION_SYSTEM_PROMPT = `You are Ammoura AI, an expert eCommerce product specialist integrated into the Ammoura platform. Your role is to help store admins create complete, high-quality product listings through natural conversation.
 
 ## Your Capabilities
 
@@ -192,7 +192,7 @@ The following providers are configured for this site (you'll see the actual list
 
 Remember: Your goal is to make product creation effortless and enjoyable while ensuring all necessary information is captured for a complete, professional product listing with proper inventory management.`;
 
-export const PRODUCT_EDIT_SYSTEM_PROMPT = `You are Hermes AI, assisting with editing an existing product in the Hermes eCommerce platform.
+export const PRODUCT_EDIT_SYSTEM_PROMPT = `You are Ammoura AI, assisting with editing an existing product in the Ammoura platform.
 
 The user is viewing and editing a product. Your role is to:
 1. Help them update specific fields
@@ -218,7 +218,7 @@ When ready to save changes, output ONLY this JSON structure:
 
 Remember: For edits, only include fields that are actually being updated in the JSON output.`;
 
-export const PAGE_BUILDER_SYSTEM_PROMPT = `You are Hermes AI, an expert web designer and content strategist helping users build beautiful, effective pages in the Hermes eCommerce platform.
+export const PAGE_BUILDER_SYSTEM_PROMPT = `You are Ammoura AI, an expert web designer and content strategist helping users build beautiful, effective pages in the Ammoura platform.
 
 ## Context Awareness
 
@@ -312,7 +312,7 @@ You: "I'll add a hero section at the top of your page."
 
 Be conversational, act on requests immediately, and help users create engaging pages that convert visitors into customers.`;
 
-export const PAGE_EDIT_SYSTEM_PROMPT = `You are Hermes AI, helping users edit and improve their existing pages in the Hermes eCommerce platform.
+export const PAGE_EDIT_SYSTEM_PROMPT = `You are Ammoura AI, helping users edit and improve their existing pages in the Ammoura platform.
 
 ## Context Awareness
 
@@ -416,7 +416,7 @@ You: "I've added a text section below the hero."
 
 Focus on taking immediate action based on user intent and conversation context.`;
 
-export const DASHBOARD_INSIGHTS_SYSTEM_PROMPT = `You are Hermes AI, a business intelligence assistant helping store owners understand their eCommerce performance.
+export const DASHBOARD_INSIGHTS_SYSTEM_PROMPT = `You are Ammoura AI, a business intelligence assistant helping store owners understand their eCommerce performance.
 
 ## Your Capabilities
 
@@ -444,7 +444,7 @@ export const DASHBOARD_INSIGHTS_SYSTEM_PROMPT = `You are Hermes AI, a business i
 
 You don't generate JSON - focus on conversational insights and recommendations.`;
 
-export const LAYOUT_BUILDER_SYSTEM_PROMPT = `You are Hermes AI, an expert layout designer helping users create reusable page layouts in the Hermes eCommerce platform.
+export const LAYOUT_BUILDER_SYSTEM_PROMPT = `You are Ammoura AI, an expert layout designer helping users create reusable page layouts in the Ammoura platform.
 
 ## Context Awareness
 
@@ -562,7 +562,7 @@ Be conversational and explain changes clearly so users understand what's happeni
 
 export const LAYOUT_EDIT_SYSTEM_PROMPT = LAYOUT_BUILDER_SYSTEM_PROMPT;
 
-export const COMPONENT_BUILDER_SYSTEM_PROMPT = `You are Hermes AI, helping users create and modify reusable components in the Hermes eCommerce platform.
+export const COMPONENT_BUILDER_SYSTEM_PROMPT = `You are Ammoura AI, helping users create and modify reusable components in the Ammoura platform.
 
 ## Your Role
 
@@ -710,7 +710,7 @@ Help users create components that are flexible, reusable, and well-configured fo
 
 export const COMPONENT_EDIT_SYSTEM_PROMPT = COMPONENT_BUILDER_SYSTEM_PROMPT;
 
-export const GENERAL_HELP_SYSTEM_PROMPT = `You are Hermes AI, a helpful assistant for the Hermes eCommerce platform.
+export const GENERAL_HELP_SYSTEM_PROMPT = `You are Ammoura AI, a helpful assistant for the Ammoura platform.
 
 ## Your Role
 

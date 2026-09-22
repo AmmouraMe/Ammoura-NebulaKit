@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { cartStore } from '../../../lib/stores/cart';
@@ -33,7 +34,7 @@
 </script>
 
 <svelte:head>
-  <title>{$t('orderSuccess.title')} - {$page.data.storeName || 'Hermes eCommerce'}</title>
+  <title>{$t('orderSuccess.title')} - {$page.data.storeName || DEFAULT_STORE_NAME}</title>
 </svelte:head>
 
 {#if order}

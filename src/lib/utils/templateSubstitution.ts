@@ -6,6 +6,7 @@
  */
 
 import type { GeneralSettings } from '$lib/server/db/site-settings';
+import { DEFAULT_STORE_NAME } from '$lib/branding';
 
 /**
  * Site context containing all available template variables
@@ -69,7 +70,7 @@ export function createSiteContext(settings: GeneralSettings): SiteContext {
  */
 export function createDefaultSiteContext(): SiteContext {
   return {
-    name: 'Hermes eCommerce',
+    name: DEFAULT_STORE_NAME,
     tagline: '',
     description: '',
     email: '',

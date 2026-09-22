@@ -1,4 +1,5 @@
 import { getDB } from '$lib/server/db/connection';
+import { DEFAULT_STORE_NAME, isPlaceholderLogoText } from '$lib/branding';
 import * as colorThemes from '$lib/server/db/color-themes';
 import { getUserThemePreferences } from '$lib/server/db/user-theme-preferences';
 import { getGeneralSettings } from '$lib/server/db/site-settings';
@@ -85,7 +86,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       userColorScheme: null,
       currentUser: locals.currentUser || null,
       currentAccount: locals.account || null,
-      storeName: 'Hermes eCommerce',
+      storeName: DEFAULT_STORE_NAME,
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
       currency: 'USD',
@@ -188,8 +189,8 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
 
             if (component.type === 'navbar') {
               // Use site title from settings if logo text is default
-              if (config.logo && config.logo.text === 'Store') {
-                config.logo.text = generalSettings.storeName || 'Hermes eCommerce';
+              if (config.logo && isPlaceholderLogoText(config.logo.text)) {
+                config.logo.text = generalSettings.storeName || DEFAULT_STORE_NAME;
               }
               layoutData.navbar = { type: 'navbar', config, position: widgetPosition };
             } else if (component.type === 'footer') {
@@ -213,8 +214,8 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
 
           if (widget.type === 'navbar') {
             // Use site title from settings if logo text is default
-            if (config.logo && config.logo.text === 'Store') {
-              config.logo.text = generalSettings.storeName || 'Hermes eCommerce';
+            if (config.logo && isPlaceholderLogoText(config.logo.text)) {
+              config.logo.text = generalSettings.storeName || DEFAULT_STORE_NAME;
             }
             layoutData.navbar = { type: 'navbar', config, position: widgetPosition };
           } else if (widget.type === 'footer') {
@@ -231,11 +232,8 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
         // Use the component's config (cast to WidgetConfig for type safety)
         const config: WidgetConfig = { ...navbarComponent.config };
         // Update site title if logo text is default
-        if (
-          config.logo &&
-          (config.logo.text === 'Store' || config.logo.text === 'Hermes eCommerce')
-        ) {
-          config.logo.text = generalSettings.storeName || 'Hermes eCommerce';
+        if (config.logo && isPlaceholderLogoText(config.logo.text)) {
+          config.logo.text = generalSettings.storeName || DEFAULT_STORE_NAME;
         }
         layoutData.navbar = { type: 'navbar', config };
       } else {
@@ -244,7 +242,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
           ...defaultNavbarConfig,
           logo: {
             ...defaultNavbarConfig.logo,
-            text: generalSettings.storeName || 'Hermes eCommerce'
+            text: generalSettings.storeName || DEFAULT_STORE_NAME
           }
         };
         layoutData.navbar = { type: 'navbar', config: navbarWithStoreName };
@@ -259,7 +257,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       userColorScheme: userPrefs?.color_scheme || null,
       currentUser: locals.currentUser || null,
       currentAccount: locals.account || null,
-      storeName: generalSettings.storeName || 'Hermes eCommerce',
+      storeName: generalSettings.storeName || DEFAULT_STORE_NAME,
       siteContext: createSiteContext(generalSettings),
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
@@ -276,7 +274,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       userColorScheme: null,
       currentUser: locals.currentUser || null,
       currentAccount: locals.account || null,
-      storeName: 'Hermes eCommerce',
+      storeName: DEFAULT_STORE_NAME,
       siteContext: createDefaultSiteContext(),
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },

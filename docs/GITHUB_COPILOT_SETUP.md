@@ -3,7 +3,7 @@
 ## Overview
 
 This document describes the comprehensive GitHub Copilot configuration for the
-Hermes project, ensuring consistent code quality, proper formatting, and test
+Ammoura project, ensuring consistent code quality, proper formatting, and test
 coverage standards.
 
 ## Configuration Location

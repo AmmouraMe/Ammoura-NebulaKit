@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Hermes eCommerce platform includes a modular, type-safe revision system for tracking changes to entities like products, pages, and future additions like categories and themes. The system is inspired by Git's approach, storing complete snapshots of entity state with parent-child relationships for branching and history visualization.
+The Ammoura platform includes a modular, type-safe revision system for tracking changes to entities like products, pages, and future additions like categories and themes. The system is inspired by Git's approach, storing complete snapshots of entity state with parent-child relationships for branching and history visualization.
 
 ## Architecture
 

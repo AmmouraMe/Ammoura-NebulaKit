@@ -1,8 +1,7 @@
 # Agent Guidelines
 
 Guidelines for AI agents (Claude Code, Amp, GitHub Copilot, etc.) working on
-this codebase — the **Ammoura™** multi-tenant eCommerce platform (codenamed
-**Hermes**).
+this codebase — the **Ammoura™** multi-tenant eCommerce platform.
 
 ## Development Workflow
 
@@ -291,7 +290,7 @@ See `.github/copilot-instructions.md` for detailed usage examples.
 
 ## Related Projects
 
-Hermes lives inside a multi-repo workspace (each sibling is its own git
+Ammoura lives inside a multi-repo workspace (each sibling is its own git
 repository — never run git commands from the workspace root):
 
 - [../CLAUDE.md](../CLAUDE.md) - Workspace map of the parent multi-repo

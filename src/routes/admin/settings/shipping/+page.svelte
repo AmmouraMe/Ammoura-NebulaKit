@@ -165,7 +165,7 @@
 </script>
 
 <svelte:head>
-  <title>Shipping Settings - Hermes Admin</title>
+  <title>Shipping Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="shipping-settings-page">

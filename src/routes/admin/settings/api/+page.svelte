@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>API Settings - Hermes Admin</title>
+  <title>API Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">

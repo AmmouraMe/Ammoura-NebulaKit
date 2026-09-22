@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { DEFAULT_STORE_NAME } from '$lib/branding';
 import { encrypt, decrypt } from '../crypto.js';
 
 export interface SiteSetting {
@@ -238,7 +239,7 @@ export async function getGeneralSettings(db: D1Database, siteId: string): Promis
   const settingsMap = new Map(settings.map((s) => [s.setting_key, s.setting_value]));
 
   return {
-    storeName: settingsMap.get('general_store_name') || 'Hermes eCommerce',
+    storeName: settingsMap.get('general_store_name') || DEFAULT_STORE_NAME,
     tagline: settingsMap.get('general_tagline') || '',
     description: settingsMap.get('general_description') || '',
     storeEmail: settingsMap.get('general_store_email') || '',

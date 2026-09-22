@@ -1,10 +1,10 @@
 # Database Management
 
-This document describes the database automation scripts and workflows for Hermes eCommerce platform.
+This document describes the database automation scripts and workflows for Ammoura platform.
 
 ## Overview
 
-Hermes uses Cloudflare D1 as its primary database with automated migration and seeding capabilities. The database setup is automated across different environments:
+Ammoura uses Cloudflare D1 as its primary database with automated migration and seeding capabilities. The database setup is automated across different environments:
 
 - **Local Development**: Auto-migrates and seeds on `npm run dev`
 - **Preview**: Auto-migrates and seeds on `npm run preview`

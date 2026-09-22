@@ -1,6 +1,6 @@
 # Cloudflare D1 Setup Guide
 
-This guide will help you set up Cloudflare D1 database for the Hermes eCommerce platform.
+This guide will help you set up Cloudflare D1 database for the Ammoura platform.
 
 ## Prerequisites
 
@@ -291,4 +291,4 @@ DEBUG=true
 - [Cloudflare D1 Documentation](https://developers.cloudflare.com/d1/)
 - [Wrangler CLI Reference](https://developers.cloudflare.com/workers/wrangler/)
 - [D1 Limits and Pricing](https://developers.cloudflare.com/d1/platform/limits/)
-- [Hermes Database Documentation](./DATABASE.md)
+- [Ammoura Database Documentation](./DATABASE.md)

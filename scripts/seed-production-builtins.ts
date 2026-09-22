@@ -1,5 +1,5 @@
 /**
- * Production seed script for Hermes built-in components
+ * Production seed script for Ammoura built-in components
  *
  * This script seeds built-in components into production databases while
  * respecting the revision system. It can be run via wrangler:

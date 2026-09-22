@@ -566,7 +566,7 @@
 </script>
 
 <svelte:head>
-  <title>AI Chat - Hermes Admin</title>
+  <title>AI Chat - Ammoura Admin</title>
 </svelte:head>
 
 <div class="chat-container">
@@ -623,7 +623,7 @@
                 ></path>
               </svg>
             </div>
-            <h2>Welcome to Hermes AI</h2>
+            <h2>Welcome to Ammoura AI</h2>
             <p>I'm here to help you create amazing product listings effortlessly.</p>
             <div class="suggestions">
               <button

@@ -108,7 +108,7 @@ async function createStagingIfNeeded() {
 }
 
 async function main() {
-  console.log('🧪 Hermes Migration Test Runner\n');
+  console.log('🧪 Ammoura Migration Test Runner\n');
   console.log('═'.repeat(60));
   console.log('This tool safely tests migrations against a copy of production.\n');
 

@@ -1,7 +1,14 @@
 # CLAUDE.md
 
-Ammoura — multi-tenant eCommerce platform (codenamed Hermes during
-development). SvelteKit 2 + TypeScript on Cloudflare Workers, D1 and R2.
+Ammoura — multi-tenant eCommerce platform. SvelteKit 2 + TypeScript on
+Cloudflare Workers, D1 and R2.
+
+The project was codenamed **Hermes** until 2026-09-22. The name is gone from
+the product, but the Cloudflare resources it created still carry it — the
+Worker `hermes`, `hermes-db`, `hermes-media` and their preview and dev-staging
+variants. Those are live identifiers, not branding: renaming one in
+`wrangler.toml` points the code at a resource that does not exist. Leave them
+until the resources themselves are renamed in Cloudflare.
 
 Read [`AGENTS.md`](./AGENTS.md) for commands, code standards, and file
 structure, and [`.github/copilot-instructions.md`](./.github/copilot-instructions.md)

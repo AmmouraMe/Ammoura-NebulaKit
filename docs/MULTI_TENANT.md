@@ -1,10 +1,10 @@
 # Multi-Site Architecture Overview
 
-This document provides a high-level overview of the multi-tenant architecture implemented in Hermes eCommerce platform.
+This document provides a high-level overview of the multi-tenant architecture implemented in Ammoura platform.
 
 ## What is Multi-Tenancy?
 
-Multi-tenancy allows a single deployment of the Hermes platform to serve multiple independent stores/sites. Each site:
+Multi-tenancy allows a single deployment of the Ammoura platform to serve multiple independent stores/sites. Each site:
 
 - Has its own isolated data (products, users, orders)
 - Can use a custom domain

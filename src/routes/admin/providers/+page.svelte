@@ -156,7 +156,7 @@
 </script>
 
 <svelte:head>
-  <title>Fulfillment Providers - Hermes Admin</title>
+  <title>Fulfillment Providers - Ammoura Admin</title>
 </svelte:head>
 
 <div class="providers-page">

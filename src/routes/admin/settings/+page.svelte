@@ -24,7 +24,7 @@
 </script>
 
 <svelte:head>
-  <title>Settings - Hermes Admin</title>
+  <title>Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">

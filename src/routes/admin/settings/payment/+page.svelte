@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>Payment Settings - Hermes Admin</title>
+  <title>Payment Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">

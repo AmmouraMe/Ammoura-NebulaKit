@@ -3,7 +3,7 @@
 ## Overview
 
 This document describes the checkout process, order management system, and
-testing procedures for the Hermes eCommerce platform.
+testing procedures for the Ammoura platform.
 
 ## Checkout Process
 

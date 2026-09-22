@@ -108,7 +108,7 @@
 </script>
 
 <svelte:head>
-  <title>Dashboard - Hermes Admin</title>
+  <title>Dashboard - Ammoura Admin</title>
 </svelte:head>
 
 <div class="dashboard">

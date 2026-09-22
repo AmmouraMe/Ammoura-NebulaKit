@@ -221,7 +221,7 @@ async function restoreBackup(dbConfig, backupPath) {
 }
 
 async function main() {
-  console.log('🔄 Hermes Database Restore Tool\n');
+  console.log('🔄 Ammoura Database Restore Tool\n');
   console.log('═'.repeat(50));
 
   // Validate arguments

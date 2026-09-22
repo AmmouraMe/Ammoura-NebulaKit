@@ -30,21 +30,21 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
         })
       });
 
-      const success = await authStore.login('owner@hermes.local', 'owner456Pass');
+      const success = await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       expect(success).toBe(true);
 
       const state = get(authState);
       expect(state.isAuthenticated).toBe(true);
       expect(state.user).not.toBeNull();
-      expect(state.user?.email).toBe('owner@hermes.local');
+      expect(state.user?.email).toBe('owner@ammoura.local');
       expect(state.user?.role).toBe('admin');
       expect(state.isLoading).toBe(false);
     });
@@ -74,14 +74,14 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
         })
       });
 
-      const loginPromise = authStore.login('owner@hermes.local', 'owner456Pass');
+      const loginPromise = authStore.login('owner@ammoura.local', 'owner456Pass');
 
       // Check immediately that loading is true
       let state = get(authState);
@@ -104,7 +104,7 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
@@ -112,7 +112,7 @@ describe('Auth Store', () => {
       });
 
       // Login first
-      await authStore.login('owner@hermes.local', 'owner456Pass');
+      await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       let state = get(authState);
       expect(state.isAuthenticated).toBe(true);
@@ -142,14 +142,14 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
         })
       });
 
-      await authStore.login('owner@hermes.local', 'owner456Pass');
+      await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       expect(authStore.checkAuth()).toBe(true);
     });
@@ -168,14 +168,14 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
         })
       });
 
-      await authStore.login('owner@hermes.local', 'owner456Pass');
+      await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       expect(authStore.isAdmin()).toBe(true);
     });
@@ -205,7 +205,7 @@ describe('Auth Store', () => {
       authState.set({
         user: {
           id: 'engineer-1',
-          email: 'engineer@hermes.local',
+          email: 'engineer@ammoura.local',
           name: 'Platform Engineer',
           role: 'platform_engineer'
         },
@@ -223,7 +223,7 @@ describe('Auth Store', () => {
       authState.set({
         user: {
           id: 'admin-1',
-          email: 'owner@hermes.local',
+          email: 'owner@ammoura.local',
           name: 'Site Owner',
           role: 'admin'
         },
@@ -238,7 +238,7 @@ describe('Auth Store', () => {
       authState.set({
         user: {
           id: 'engineer-1',
-          email: 'engineer@hermes.local',
+          email: 'engineer@ammoura.local',
           name: 'Platform Engineer',
           role: 'platform_engineer'
         },
@@ -253,7 +253,7 @@ describe('Auth Store', () => {
       authState.set({
         user: {
           id: 'user-1',
-          email: 'user@hermes.local',
+          email: 'user@ammoura.local',
           name: 'Regular User',
           role: 'user'
         },
@@ -276,7 +276,7 @@ describe('Auth Store', () => {
         new Error('Network error')
       );
 
-      const success = await authStore.login('owner@hermes.local', 'owner456Pass');
+      const success = await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       expect(success).toBe(false);
 
@@ -294,14 +294,14 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
         })
       });
 
-      await authStore.login('owner@hermes.local', 'owner456Pass');
+      await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       // Mock logout endpoint to throw an error
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
@@ -326,7 +326,7 @@ describe('Auth Store', () => {
         })
       });
 
-      const success = await authStore.login('owner@hermes.local', 'owner456Pass');
+      const success = await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       expect(success).toBe(false);
 
@@ -373,14 +373,14 @@ describe('Auth Store', () => {
           success: true,
           user: {
             id: 'admin-1',
-            email: 'owner@hermes.local',
+            email: 'owner@ammoura.local',
             name: 'Site Owner',
             role: 'admin'
           }
         })
       });
 
-      await authStore.login('owner@hermes.local', 'owner456Pass');
+      await authStore.login('owner@ammoura.local', 'owner456Pass');
 
       // Should have received multiple state updates
       expect(states.length).toBeGreaterThan(1);

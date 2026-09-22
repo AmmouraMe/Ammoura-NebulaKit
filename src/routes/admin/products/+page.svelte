@@ -86,7 +86,7 @@
 </script>
 
 <svelte:head>
-  <title>Products Management - Hermes Admin</title>
+  <title>Products Management - Ammoura Admin</title>
 </svelte:head>
 
 <div class="products-page">

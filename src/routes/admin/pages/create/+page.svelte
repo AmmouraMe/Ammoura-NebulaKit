@@ -87,7 +87,7 @@
 </script>
 
 <svelte:head>
-  <title>Create Page - Hermes Admin</title>
+  <title>Create Page - Ammoura Admin</title>
 </svelte:head>
 
 <PageEditor

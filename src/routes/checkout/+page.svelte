@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -173,7 +174,7 @@
 </script>
 
 <svelte:head>
-  <title>{$t('checkout.title')} - {$page.data.storeName || 'Hermes eCommerce'}</title>
+  <title>{$t('checkout.title')} - {$page.data.storeName || DEFAULT_STORE_NAME}</title>
 </svelte:head>
 
 <div class="checkout-container">

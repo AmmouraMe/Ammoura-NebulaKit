@@ -677,7 +677,7 @@ function getPricingHeader(): unknown {
           type: 'heading',
           position: 1,
           config: {
-            heading: 'Hermes eCommerce Pricing',
+            heading: 'Ammoura Pricing',
             level: 2,
             textColor: 'theme:text',
             alignment: 'center',

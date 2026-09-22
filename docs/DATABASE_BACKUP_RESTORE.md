@@ -4,7 +4,7 @@ This guide explains how to backup, restore, and safely test migrations against p
 
 ## Overview
 
-Hermes provides a complete database backup and restore system that allows you to:
+Ammoura provides a complete database backup and restore system that allows you to:
 
 1. **Backup** production, preview, or local databases to SQL files
 2. **Restore** backups to staging, local, or preview environments

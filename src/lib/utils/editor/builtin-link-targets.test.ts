@@ -122,7 +122,10 @@ describe('Built-in legal pages (issue #72)', () => {
       // The tenant's own name, not another tenant's, and not a hardcoded one.
       const serialised = JSON.stringify(widgets);
       expect(serialised).toContain('${site.name}');
+      // Neither the old codename nor the platform's own name belongs in a
+      // tenant's builtin content.
       expect(serialised).not.toContain('Hermes');
+      expect(serialised).not.toContain('Ammoura');
     }
   });
 

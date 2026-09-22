@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import { beforeNavigate, afterNavigate, goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount, onDestroy } from 'svelte';
@@ -248,7 +249,7 @@
           <path d="M3 12h18M3 6h18M3 18h18" stroke-width="2" stroke-linecap="round"></path>
         </svg>
       </button>
-      <h1>{$page.data?.storeName || 'Hermes eCommerce'} Admin</h1>
+      <h1>{$page.data?.storeName || DEFAULT_STORE_NAME} Admin</h1>
       <div class="header-actions">
         <NotificationCenter {notifications} {unreadCount} />
         <a
@@ -273,7 +274,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" class:open={isSidebarOpen}>
       <div class="sidebar-header">
-        <h2>{$page.data?.storeName || 'Hermes eCommerce'} Admin</h2>
+        <h2>{$page.data?.storeName || DEFAULT_STORE_NAME} Admin</h2>
         <button class="close-sidebar" on:click={closeSidebar} aria-label="Close menu">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>

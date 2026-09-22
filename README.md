@@ -1,12 +1,10 @@
 # Ammoura™ eCommerce Platform
 
-_(codenamed Hermes during development)_
-
 | Statements                                                                              | Branches                                                                            | Functions                                                                             | Lines                                                                         |
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | ![Statements](https://img.shields.io/badge/statements-95%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-92%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-96%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-95%25-brightgreen.svg?style=flat) |
 
-Hermes is a modern multi-tenant eCommerce platform built with SvelteKit and
+Ammoura is a modern multi-tenant eCommerce platform built with SvelteKit and
 TypeScript, deployed as a Cloudflare Worker with D1 database and R2 storage. It
 features a WYSIWYG page builder, responsive design, and comprehensive theme
 system. It supports role-based authentication and is designed for scalability
@@ -69,15 +67,17 @@ _progress_, and "ready for review" means _done_.
 
 ```bash
 # Fork the repository on your local system
-git clone https://github.com/starspacegroup/hermes.git
+git clone https://github.com/AmmouraMe/Ammoura-NebulaKit.git
 
 # Change to the project directory
-cd hermes
+cd Ammoura-NebulaKit
 
 # Install npm packages
 npm install
 
-# Create D1 database
+# Create D1 database. The `hermes-` prefix is the project's old codename and is
+# kept deliberately: these names match live Cloudflare resources, so they are
+# identifiers rather than branding. Match whatever wrangler.toml declares.
 wrangler d1 create hermes-db
 # Update wrangler.toml with the database_id from output of above command
 

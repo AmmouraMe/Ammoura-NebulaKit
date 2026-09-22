@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Hermes theme system provides a robust, type-safe way to manage light/dark
+The Ammoura theme system provides a robust, type-safe way to manage light/dark
 themes with system preference support. It's designed to be bulletproof with
 proper SSR handling, memory leak prevention, and comprehensive error handling.
 

@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-  <title>Tax Settings - Hermes Admin</title>
+  <title>Tax Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">

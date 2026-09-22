@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Redirecting to Builder - Hermes Admin</title>
+  <title>Redirecting to Builder - Ammoura Admin</title>
 </svelte:head>
 
 <div style="padding: 2rem; text-align: center;">
