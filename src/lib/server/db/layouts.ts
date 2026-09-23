@@ -363,6 +363,7 @@ export async function deleteLayoutWidget(db: D1Database, widgetId: string): Prom
  */
 export async function updateLayoutComponents(
   db: D1Database,
+  layoutId: number,
   components: Array<{
     id: string;
     type?: string;
@@ -390,10 +391,11 @@ export async function updateLayoutComponents(
       }
 
       updates.push('updated_at = CURRENT_TIMESTAMP');
-      values.push(component.id);
+      values.push(component.id, layoutId);
 
+      // Scoped to the layout so a caller can only touch widgets it owns.
       return db
-        .prepare(`UPDATE layout_widgets SET ${updates.join(', ')} WHERE id = ?`)
+        .prepare(`UPDATE layout_widgets SET ${updates.join(', ')} WHERE id = ? AND layout_id = ?`)
         .bind(...values);
     });
 

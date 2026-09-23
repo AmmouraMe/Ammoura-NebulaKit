@@ -7,11 +7,15 @@ import type { RequestHandler } from './$types';
  * PUT /api/page-components/[id]
  * Update a page component
  */
-export const PUT: RequestHandler = async ({ params, request, platform }) => {
+export const PUT: RequestHandler = async ({ params, request, platform, locals }) => {
   const db = getDB(platform);
   const componentId = params.id;
 
   try {
+    if (!(await pagesDb.getWidgetByIdForSite(db, locals.siteId, componentId))) {
+      throw error(404, 'Page component not found');
+    }
+
     const data = (await request.json()) as {
       type?: string;
       config?: object;
@@ -43,11 +47,15 @@ export const PUT: RequestHandler = async ({ params, request, platform }) => {
  * DELETE /api/page-components/[id]
  * Delete a page component
  */
-export const DELETE: RequestHandler = async ({ params, platform }) => {
+export const DELETE: RequestHandler = async ({ params, platform, locals }) => {
   const db = getDB(platform);
   const componentId = params.id;
 
   try {
+    if (!(await pagesDb.getWidgetByIdForSite(db, locals.siteId, componentId))) {
+      throw error(404, 'Page component not found');
+    }
+
     const deleted = await pagesDb.deletePageComponent(db, componentId);
     if (!deleted) {
       throw error(404, 'Page component not found');
