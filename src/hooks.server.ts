@@ -34,7 +34,9 @@ const OWNER_ONLY_WRITE_PREFIXES = [
   '/api/page-components',
   '/api/components',
   '/api/layouts',
-  '/api/orders/'
+  '/api/orders/',
+  // DELETE removed the site's media (DB row and R2 object) for anyone.
+  '/api/media-library'
 ];
 
 /**

@@ -21,7 +21,8 @@ describe('isOwnerOnlyRequest', () => {
     ['/api/components/abc/children', 'POST'],
     ['/api/layouts', 'POST'],
     ['/api/layouts/abc', 'PUT'],
-    ['/api/orders/abc/status', 'PATCH']
+    ['/api/orders/abc/status', 'PATCH'],
+    ['/api/media-library', 'DELETE']
   ])('requires an owner for %s %s', (path, method) => {
     expect(isOwnerOnlyRequest(path, method)).toBe(true);
   });
@@ -34,6 +35,7 @@ describe('isOwnerOnlyRequest', () => {
     ['/api/components/abc', 'GET'],
     ['/api/layouts/abc', 'GET'],
     ['/api/media/some/image.png', 'GET'],
+    ['/api/media-library', 'GET'],
     // Shoppers are anonymous
     ['/api/orders', 'POST'],
     ['/api/products/abc/design-upload', 'POST'],
