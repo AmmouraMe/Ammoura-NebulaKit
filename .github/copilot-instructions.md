@@ -736,7 +736,8 @@ CREATE INDEX IF NOT EXISTS idx_user_preferences_site ON user_preferences(site_id
 ### Environment Variables
 
 - **PLATFORM_ENGINEER_EMAIL** - the user with this email is elevated to
-  `platform_engineer` on their next sign-in; this is how the first superuser is
+  `platform_engineer` on their next sign-in (over SSO, only when the provider
+  reports the email as verified); this is how the first superuser is
   created (nothing is seeded)
 - **ENCRYPTION_KEY** - encrypts stored provider credentials
 - Set in `.dev.vars` for local development
@@ -768,7 +769,7 @@ CREATE INDEX IF NOT EXISTS idx_user_preferences_site ON user_preferences(site_id
   - Authentication tokens and session secrets
   - Database credentials
   - Any PII (Personally Identifiable Information)
-  - User passwords (use bcrypt/argon2 with salt)
+  - User passwords (salted PBKDF2-SHA256 via `$lib/server/password`, hashed server-side)
 
 #### Database Security
 

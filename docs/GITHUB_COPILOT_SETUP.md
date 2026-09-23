@@ -100,10 +100,10 @@ npm run check
 npm run test:coverage
 
 # 5. Complete verification (runs all above)
-npm run prepare
+npm run gate
 ```
 
-**If `npm run prepare` passes, code quality is verified.**
+**If `npm run gate` passes, code quality is verified.**
 
 ## Test-Driven Development (TDD)
 
@@ -131,7 +131,7 @@ npm run test:coverage
 
 # 4. Refactor and repeat (REFACTOR)
 # 5. Before committing
-npm run prepare
+npm run gate
 ```
 
 ### TDD Checklist
@@ -273,7 +273,7 @@ npm run lint                 # Check linting
 npm run check                # Type check (CRITICAL)
 npm test                     # Run tests
 npm run test:coverage        # Run tests with coverage
-npm run prepare              # Complete verification
+npm run gate              # Complete verification
 
 # Testing
 npm run test:watch           # Interactive test mode

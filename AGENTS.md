@@ -103,7 +103,10 @@ One deployment serves many independent stores/sites. See
   tenant context from `locals` in server load functions/actions. This is the
   core isolation guarantee — never bypass it.
 - **Roles**: `admin`, `platform_engineer`, `customer` (session-based auth with
-  secure cookies; see `docs/AUTHENTICATION_SETUP.md`).
+  secure cookies; see `docs/AUTHENTICATION_SETUP.md`). A user session is only
+  honoured on the site it was created for. Only a platform engineer may grant
+  or revoke `platform_engineer` (`canAssignRole` in `$lib/server/permissions`),
+  and nobody may grant a permission they do not hold.
 
 ### Cloudflare Platform
 
@@ -237,14 +240,16 @@ Follow SvelteKit conventions:
   90%. Check with `npm run test:coverage`.
 - No failing tests allowed; `npm run check` must pass with zero TypeScript
   errors before a task is complete.
-- **`npm run prepare` is the gold standard** — run it before considering any
-  work finished. Quality gates are never skipped (exception: explicit
+- **`npm run gate` is the gold standard** (lint → `check` → tests; the
+  husky pre-commit hook runs it) — run it before considering any work
+  finished. `npm run prepare` only installs the git hooks. Quality gates are never skipped (exception: explicit
   prototypes/spikes, which must be refactored with tests afterwards).
 
 ## Security (non-negotiable)
 
 - **Never store or commit secrets in plaintext** — encrypt sensitive data at
-  rest (API keys, tokens, PII; passwords hashed with bcrypt/argon2)
+  rest (API keys, tokens, PII; passwords hashed with salted PBKDF2-SHA256 via `$lib/server/password`, on
+  the server — never accept a hash computed in the browser)
 - **Always use prepared statements** — never string-concatenate SQL
 - **Always filter by `site_id`** for tenant data (multi-tenant isolation)
 - **Log significant actions** to activity logs via
