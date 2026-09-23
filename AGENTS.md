@@ -82,8 +82,8 @@ _progress_, and "ready for review" means _done_.
 - Write commit messages in imperative mood: "Add feature" not "Added feature"
 - Include issue or ticket references when applicable (e.g., `refs #123`)
 - Keep commits logically grouped; avoid mixing unrelated changes
-- Pre-commit hooks (husky + lint-staged) run Prettier and ESLint; commits fail
-  if formatting or linting fails
+- The husky pre-commit hook runs `npm run gate` (Prettier check, ESLint,
+  svelte-check, tests); commits fail if any of them fails
 
 ## Big-Picture Architecture
 

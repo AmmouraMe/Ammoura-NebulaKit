@@ -211,19 +211,18 @@ describe('calculateDiscount', () => {
 
 ## Automated Quality Enforcement
 
-### Pre-commit Hooks (Husky + lint-staged)
+### Pre-commit Hook (Husky)
 
-```json
-{
-  "*.{js,ts,svelte}": ["prettier --write", "eslint --fix"]
-}
-```
+The husky pre-commit hook (`.husky/pre-commit`) runs `npm run gate`: Prettier
+check, ESLint, `svelte-check` and the full test suite. It reports formatting
+problems rather than rewriting files; run `npm run format` to fix them.
 
 **Git commits will fail if:**
 
 - Formatting is incorrect
 - ESLint errors exist
 - Type checking fails
+- Any test fails
 
 ## Coverage Improvement Strategies
 

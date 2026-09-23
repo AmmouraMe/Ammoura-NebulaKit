@@ -1066,19 +1066,18 @@ Before submitting code, verify:
 
 ### Automated Quality Enforcement
 
-This project uses **lint-staged** with **husky** for pre-commit hooks:
+This project uses **husky** for pre-commit hooks.
 
-```json
-{
-  "*.{js,ts,svelte}": ["prettier --write", "eslint --fix"]
-}
-```
+The husky pre-commit hook (`.husky/pre-commit`) runs `npm run gate`: Prettier
+check, ESLint, `svelte-check` and the full test suite. It reports formatting
+problems rather than rewriting files; run `npm run format` to fix them.
 
 **Git commits will fail if:**
 
 - Formatting is incorrect
 - ESLint errors exist
 - Type checking fails
+- Any test fails
 
 **Always run `npm run gate` before considering work complete.**
 
