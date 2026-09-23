@@ -12,7 +12,13 @@ import {
   createUser,
   type CreateUserData
 } from '$lib/server/db';
-import { canPerformAction, isUserAccountActive } from '$lib/server/permissions';
+import {
+  canCreateWithRole,
+  canGrantPermissions,
+  canPerformAction,
+  isUserAccountActive
+} from '$lib/server/permissions';
+import { hashPassword } from '$lib/server/password';
 
 /**
  * GET /api/admin/users
@@ -101,15 +107,42 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
     const db = getDB(platform);
     const siteId = locals.siteId;
 
-    const data = (await request.json()) as CreateUserData & {
+    const {
+      password,
+      password_hash: _clientHash,
+      ...data
+    } = (await request.json()) as Omit<CreateUserData, 'password_hash'> & {
+      password?: string;
+      password_hash?: unknown;
       expiration_date?: string | number | null;
     };
 
-    // Validate required fields
-    if (!data.email || !data.name || !data.password_hash) {
+    // Validate required fields. The password is hashed here, never trusted as
+    // a hash from the browser: a client-side unsalted SHA-256 is just a
+    // password-equivalent, and it let the caller store any hash format at all.
+    if (!data.email || !data.name || typeof password !== 'string' || !password) {
       return json(
         { success: false, error: 'Email, name, and password are required' },
         { status: 400 }
+      );
+    }
+    if (password.length < 8) {
+      return json(
+        { success: false, error: 'Password must be at least 8 characters' },
+        { status: 400 }
+      );
+    }
+
+    if (!canCreateWithRole(currentUser, data.role)) {
+      return json(
+        { success: false, error: 'Insufficient permissions to assign that role' },
+        { status: 403 }
+      );
+    }
+    if (!canGrantPermissions(currentUser, data.permissions)) {
+      return json(
+        { success: false, error: 'Cannot grant permissions you do not have' },
+        { status: 403 }
       );
     }
 
@@ -126,6 +159,7 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
     // Create user
     const user = await createUser(db, siteId, {
       ...data,
+      password_hash: await hashPassword(password),
       expiration_date: expirationTimestamp,
       created_by: currentUser.id
     });

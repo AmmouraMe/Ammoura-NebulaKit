@@ -85,16 +85,6 @@
     return Object.keys(errors).length === 0;
   }
 
-  async function hashPassword(password: string): Promise<string> {
-    // In a real app, this would be done server-side with bcrypt
-    // For demo purposes, we'll use a simple hash
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-  }
-
   async function handleSubmit(e: Event): Promise<void> {
     e.preventDefault();
 
@@ -105,8 +95,6 @@
     isSubmitting = true;
 
     try {
-      const password_hash = await hashPassword(formData.password);
-
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
@@ -115,7 +103,7 @@
         body: JSON.stringify({
           email: formData.email,
           name: formData.name,
-          password_hash,
+          password: formData.password,
           role: formData.role,
           status: formData.status,
           permissions: formData.permissions,

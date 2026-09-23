@@ -1,7 +1,14 @@
 import type { PageServerLoad, Actions } from './$types';
 import { getDB, getUserById } from '$lib/server/db';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { canPerformAction, isSystemUser } from '$lib/server/permissions';
+import {
+  canAssignRole,
+  canGrantPermissions,
+  canPerformAction,
+  isSystemUser,
+  parseUserPermissions
+} from '$lib/server/permissions';
+import { hashPassword } from '$lib/server/password';
 
 export const load: PageServerLoad = async ({ platform, locals, params }) => {
   // Check authentication
@@ -129,15 +136,11 @@ export const actions: Actions = {
       errors.grace_period_days = 'Grace period cannot be negative';
     }
 
-    // Check if role change requires special permission
-    if (role !== undefined) {
-      const existingUser = await getUserById(db, siteId, userId);
-
-      if (existingUser && existingUser.role !== role) {
-        if (!canPerformAction(currentUser, 'users:roles')) {
-          errors.role = 'Insufficient permissions to change user role';
-        }
-      }
+    // Role changes need users:roles, and only a platform engineer may grant
+    // or revoke platform_engineer.
+    const existingUser = await getUserById(db, siteId, userId);
+    if (existingUser && !canAssignRole(currentUser, role, existingUser.role)) {
+      errors.role = 'Insufficient permissions to change user role';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -153,6 +156,18 @@ export const actions: Actions = {
         } catch {
           return fail(400, { errors: { permissions: 'Invalid permissions format' } });
         }
+      }
+      if (
+        !Array.isArray(permissions) ||
+        !canGrantPermissions(
+          currentUser,
+          permissions,
+          existingUser ? parseUserPermissions(existingUser) : []
+        )
+      ) {
+        return fail(403, {
+          errors: { permissions: 'Cannot grant permissions you do not have' }
+        });
       }
 
       // Build update data
@@ -184,12 +199,7 @@ export const actions: Actions = {
         if (newPassword.length < 8) {
           return fail(400, { errors: { new_password: 'Password must be at least 8 characters' } });
         }
-        // Hash the password (client-side hashing, in production use server-side bcrypt)
-        const encoder = new TextEncoder();
-        const data = encoder.encode(newPassword);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        updateData.password_hash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+        updateData.password_hash = await hashPassword(newPassword);
       }
 
       // Update user
