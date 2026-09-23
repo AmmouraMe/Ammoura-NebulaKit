@@ -89,10 +89,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const status = formData.get('status')?.toString() as
-      | 'active'
-      | 'inactive'
-      | 'expired'
-      | 'suspended';
+      'active' | 'inactive' | 'expired' | 'suspended';
 
     if (!status || !['active', 'inactive', 'expired', 'suspended'].includes(status)) {
       throw error(400, 'Invalid status');
@@ -146,10 +143,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const role = formData.get('role')?.toString() as
-      | 'admin'
-      | 'user'
-      | 'customer'
-      | 'platform_engineer';
+      'admin' | 'user' | 'customer' | 'platform_engineer';
 
     if (!role || !['admin', 'user', 'customer', 'platform_engineer'].includes(role)) {
       throw error(400, 'Invalid role');

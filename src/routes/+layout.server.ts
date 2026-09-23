@@ -177,8 +177,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       for (const widget of layoutWidgets) {
         // Extract position settings from the layout widget (if set)
         const widgetPosition = widget.config?.position as
-          | ResponsiveValue<PositionConfig>
-          | undefined;
+          ResponsiveValue<PositionConfig> | undefined;
 
         // Handle component_ref widgets that reference navbar or footer components
         if (widget.type === 'component_ref' && widget.config?.componentId) {

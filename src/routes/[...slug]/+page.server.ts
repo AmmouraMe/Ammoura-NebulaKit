@@ -192,8 +192,7 @@ export const load: PageServerLoad = async ({
     if (hasCustomLayout && layoutComponents.length > 0) {
       for (const widget of layoutComponents) {
         const widgetPosition = widget.config?.position as
-          | ResponsiveValue<PositionConfig>
-          | undefined;
+          ResponsiveValue<PositionConfig> | undefined;
 
         // Handle component_ref widgets that reference navbar or footer
         if (widget.type === 'component_ref' && widget.config?.componentId) {

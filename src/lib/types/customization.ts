@@ -96,14 +96,7 @@ export interface CartItemCustomization {
 //  "Upload your design", "Record a voice message")
 
 export type CustomizationFieldType =
-  | 'text'
-  | 'textarea'
-  | 'select'
-  | 'color'
-  | 'number'
-  | 'image'
-  | 'audio'
-  | 'video';
+  'text' | 'textarea' | 'select' | 'color' | 'number' | 'image' | 'audio' | 'video';
 
 /**
  * Media quality requirements for image, audio, and video field types.

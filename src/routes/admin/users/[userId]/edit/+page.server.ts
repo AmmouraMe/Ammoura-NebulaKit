@@ -97,15 +97,9 @@ export const actions: Actions = {
     const email = formData.get('email')?.toString();
     const name = formData.get('name')?.toString();
     const role = formData.get('role')?.toString() as
-      | 'admin'
-      | 'user'
-      | 'customer'
-      | 'platform_engineer';
+      'admin' | 'user' | 'customer' | 'platform_engineer';
     const status = formData.get('status')?.toString() as
-      | 'active'
-      | 'inactive'
-      | 'expired'
-      | 'suspended';
+      'active' | 'inactive' | 'expired' | 'suspended';
     const expiration_date = formData.get('expiration_date')?.toString();
     const grace_period_days = formData.get('grace_period_days')?.toString();
     const permissionsJson = formData.get('permissions')?.toString();

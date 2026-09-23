@@ -10,15 +10,7 @@
 // --- Equipment Field Types ---
 
 export type EquipmentFieldType =
-  | 'text'
-  | 'textarea'
-  | 'select'
-  | 'color'
-  | 'number'
-  | 'date'
-  | 'image'
-  | 'audio'
-  | 'video';
+  'text' | 'textarea' | 'select' | 'color' | 'number' | 'date' | 'image' | 'audio' | 'video';
 
 // Re-export MediaRequirements from customization so consumers can use it
 export type { MediaRequirements } from './customization';

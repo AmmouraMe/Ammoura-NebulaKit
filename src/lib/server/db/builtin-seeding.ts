@@ -187,8 +187,7 @@ export async function seedBuiltinComponent(
       type,
       config: defaultConfig as unknown as Record<string, unknown>,
       children: (defaultConfig as { children?: unknown[] }).children as
-        | ComponentRevisionData['children']
-        | undefined
+        ComponentRevisionData['children'] | undefined
     };
 
     const revision = await createRevision<ComponentRevisionData>(db, siteId, {
@@ -249,8 +248,7 @@ export async function seedBuiltinComponent(
     type,
     config: defaultConfig as unknown as Record<string, unknown>,
     children: (defaultConfig as { children?: unknown[] }).children as
-      | ComponentRevisionData['children']
-      | undefined
+      ComponentRevisionData['children'] | undefined
   };
 
   const newRevision = await createRevision<ComponentRevisionData>(db, siteId, {

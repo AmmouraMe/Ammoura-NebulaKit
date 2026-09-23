@@ -64,8 +64,7 @@ export interface StorageLike {
 }
 
 export type SaveResult =
-  | { ok: true; bytes: number }
-  | { ok: false; reason: 'too-large' | 'quota' | 'unavailable' };
+  { ok: true; bytes: number } | { ok: false; reason: 'too-large' | 'quota' | 'unavailable' };
 
 export function draftKey(productId: string): string {
   return `${KEY_PREFIX}:${productId}`;
