@@ -547,7 +547,7 @@ describe('layouts database operations', () => {
       ];
 
       await expect(
-        updateLayoutComponents(mockDb as unknown as D1Database, components)
+        updateLayoutComponents(mockDb as unknown as D1Database, 7, components)
       ).resolves.not.toThrow();
 
       expect(mockDb.batch).toHaveBeenCalled();
@@ -556,7 +556,7 @@ describe('layouts database operations', () => {
     it('should update component type', async () => {
       const components = [{ id: 'w1', type: 'footer' }];
 
-      await updateLayoutComponents(mockDb as unknown as D1Database, components);
+      await updateLayoutComponents(mockDb as unknown as D1Database, 7, components);
 
       expect(mockDb.batch).toHaveBeenCalled();
     });
@@ -564,16 +564,23 @@ describe('layouts database operations', () => {
     it('should update component config', async () => {
       const components = [{ id: 'w1', config: { text: 'value' } }];
 
-      await updateLayoutComponents(mockDb as unknown as D1Database, components);
+      await updateLayoutComponents(mockDb as unknown as D1Database, 7, components);
 
       expect(mockDb.batch).toHaveBeenCalled();
+    });
+
+    it('scopes every update to the layout', async () => {
+      await updateLayoutComponents(mockDb as unknown as D1Database, 7, [{ id: 'w1', position: 0 }]);
+
+      expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('AND layout_id = ?'));
+      expect(mockDb.prepare.mock.results[0].value.bind).toHaveBeenCalledWith(0, 'w1', 7);
     });
 
     it('should throw error on database failure', async () => {
       mockDb.batch.mockRejectedValue(new Error('DB error'));
 
       await expect(
-        updateLayoutComponents(mockDb as unknown as D1Database, [{ id: 'w1', position: 0 }])
+        updateLayoutComponents(mockDb as unknown as D1Database, 7, [{ id: 'w1', position: 0 }])
       ).rejects.toThrow('DB error');
     });
   });

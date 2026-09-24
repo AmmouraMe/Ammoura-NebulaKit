@@ -55,8 +55,7 @@ function revisionDataToComponents(
   const children =
     data.children ||
     ((data.config as Record<string, unknown> | undefined)?.children as
-      | ComponentRevisionData['children']
-      | undefined) ||
+      ComponentRevisionData['children'] | undefined) ||
     [];
 
   if (!children || children.length === 0) {

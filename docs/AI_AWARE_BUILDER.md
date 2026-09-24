@@ -190,9 +190,7 @@ Adds new widgets at a specific position or at the end.
 ```json
 {
   "action": "add",
-  "widgets": [
-    /* PageWidget objects */
-  ],
+  "widgets": [/* PageWidget objects */],
   "position": 0 // Optional: insert at specific position
 }
 ```
@@ -234,9 +232,7 @@ Changes the order of widgets.
 ```json
 {
   "action": "reorder",
-  "widgets": [
-    /* Array of widgets in new order */
-  ]
+  "widgets": [/* Array of widgets in new order */]
 }
 ```
 

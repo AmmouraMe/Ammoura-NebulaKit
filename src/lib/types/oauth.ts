@@ -3,14 +3,7 @@
  */
 
 export type OAuthProvider =
-  | 'google'
-  | 'linkedin'
-  | 'apple'
-  | 'facebook'
-  | 'github'
-  | 'twitter'
-  | 'microsoft'
-  | 'discord';
+  'google' | 'linkedin' | 'apple' | 'facebook' | 'github' | 'twitter' | 'microsoft' | 'discord';
 
 export type AuthEventType =
   | 'login_success'

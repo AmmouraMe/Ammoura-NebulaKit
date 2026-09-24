@@ -247,8 +247,7 @@ Use this context to help the user with their current task.`;
         let accumulatedResponse = '';
         const assistantMessageTimestamp = Date.now();
         let usageInfo:
-          | { inputTokens: number; outputTokens: number; totalTokens: number }
-          | undefined;
+          { inputTokens: number; outputTokens: number; totalTokens: number } | undefined;
 
         try {
           // Stream the AI response

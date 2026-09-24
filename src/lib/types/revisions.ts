@@ -3,13 +3,7 @@
  */
 
 export type EntityType =
-  | 'page'
-  | 'product'
-  | 'category'
-  | 'theme'
-  | 'site'
-  | 'component'
-  | 'layout';
+  'page' | 'product' | 'category' | 'theme' | 'site' | 'component' | 'layout';
 
 /**
  * Component revision data structure - stores the full component state

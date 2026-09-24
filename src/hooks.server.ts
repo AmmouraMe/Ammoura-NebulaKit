@@ -34,7 +34,9 @@ const OWNER_ONLY_WRITE_PREFIXES = [
   '/api/page-components',
   '/api/components',
   '/api/layouts',
-  '/api/orders/'
+  '/api/orders/',
+  // DELETE removed the site's media (DB row and R2 object) for anyone.
+  '/api/media-library'
 ];
 
 /**
@@ -206,7 +208,13 @@ export const handle: Handle = async ({ event, resolve }) => {
     try {
       const db = getDB(event.platform);
       const resolved = await getUserBySessionToken(db, userToken);
-      if (resolved) {
+      if (resolved && resolved.session.site_id !== siteId) {
+        // A session belongs to the site it was created on. Without this check
+        // an admin of tenant A could replay their own cookie against tenant
+        // B's hostname and be treated as B's admin. The cookie is left alone:
+        // it is still valid on its own site (and in dev every simulated
+        // tenant shares one origin, so deleting it would sign the user out).
+      } else if (resolved) {
         event.locals.currentUser = resolved.user;
         event.locals.isAdmin =
           resolved.user.role === 'admin' || resolved.user.role === 'platform_engineer';
