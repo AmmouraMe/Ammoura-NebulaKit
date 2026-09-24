@@ -2,6 +2,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { getDB, getUserById } from '$lib/server/db';
 import { getActivityLogs } from '$lib/server/db/activity-logs';
 import {
+  canAssignRole,
   canPerformAction,
   isUserAccountActive,
   isSystemUser,
@@ -88,10 +89,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const status = formData.get('status')?.toString() as
-      | 'active'
-      | 'inactive'
-      | 'expired'
-      | 'suspended';
+      'active' | 'inactive' | 'expired' | 'suspended';
 
     if (!status || !['active', 'inactive', 'expired', 'suspended'].includes(status)) {
       throw error(400, 'Invalid status');
@@ -145,10 +143,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const role = formData.get('role')?.toString() as
-      | 'admin'
-      | 'user'
-      | 'customer'
-      | 'platform_engineer';
+      'admin' | 'user' | 'customer' | 'platform_engineer';
 
     if (!role || !['admin', 'user', 'customer', 'platform_engineer'].includes(role)) {
       throw error(400, 'Invalid role');
@@ -156,6 +151,14 @@ export const actions: Actions = {
 
     const db = getDB(platform);
     const siteId = locals.siteId;
+
+    const target = await getUserById(db, siteId, userId);
+    if (!target) {
+      throw error(404, 'User not found');
+    }
+    if (!canAssignRole(currentUser, role, target.role)) {
+      throw error(403, 'Insufficient permissions to assign that role');
+    }
 
     // Update user role
     const { updateUser } = await import('$lib/server/db/users');

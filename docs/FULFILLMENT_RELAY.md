@@ -92,54 +92,40 @@ who discovers the order never shipped.
 
 ## The sweep
 
-Retries are driven by `POST /api/cron/fulfillment-retry`, which retries every
-relay whose backoff has elapsed, across all sites, up to 25 in a call
-(`?limit=` raises it to at most 100). Each retry is scoped by the `site_id` on
-the row it came from.
+Retries are driven by the **`fulfillment-retry` scheduled job**, which runs
+every ten minutes on a Cloudflare Cron Trigger. It retries every relay whose
+backoff has elapsed, across all sites, up to 25 in a pass. Each retry is scoped
+by the `site_id` on the row it came from.
 
-The endpoint requires `Authorization: Bearer $CRON_SECRET`. Without
-`CRON_SECRET` configured it refuses every request — an open sweep endpoint would
-let anyone drive every tenant's fulfillment.
+The job is registered in `src/lib/server/scheduler/registry.ts` and the full
+mechanism is documented in [SCHEDULED_JOBS.md](./SCHEDULED_JOBS.md). Nothing
+here needs configuring: the Cron Trigger is in `wrangler.toml` and deploys with
+the Worker.
 
-### Why an HTTP endpoint and not Cloudflare Queues
-
-Queues, or a Cron Trigger calling a `scheduled()` handler, would be the natural
-transport. Neither is available: `@sveltejs/adapter-cloudflare` emits a
-fetch-only `_worker.js`, so there is no handler for a queue or a trigger to
-call, and adding one means owning a custom worker wrapper around the adapter's
-output.
-
-A D1 table swept over HTTP needs no new binding, behaves identically in local
-dev, preview and production, and is trivially testable. The volume this has to
-carry is a handful of orders a day. If that stops being true, the relay table
-stays as the record and the transport can be swapped underneath it.
-
-### Configuring the schedule
-
-`.github/workflows/fulfillment-retry.yml` calls the endpoint every ten minutes.
-It needs two repository secrets, and skips quietly if either is missing:
-
-| Secret                  | Value                                                |
-| ----------------------- | ---------------------------------------------------- |
-| `FULFILLMENT_RETRY_URL` | `https://<a site domain>/api/cron/fulfillment-retry` |
-| `CRON_SECRET`           | The same value as the Worker secret below            |
-
-Set the Worker secret with:
+To force a sweep without waiting for the cron:
 
 ```bash
-wrangler secret put CRON_SECRET
-```
-
-Locally, put `CRON_SECRET` in `.dev.vars` and call the endpoint by hand:
-
-```bash
-curl -X POST http://localhost:4236/api/cron/fulfillment-retry \
+curl -X POST "https://<a site domain>/api/cron/run?job=fulfillment-retry" \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 
-GitHub's scheduler is best-effort and runs late under load. That is acceptable
-here: the backoff is measured in minutes to hours, so a late sweep delays a
-retry rather than losing it.
+`CRON_SECRET` is optional and only used for that manual path — the schedule
+itself authenticates in-process. Locally, put it in `.dev.vars` and call
+`http://localhost:4236/api/cron/run?job=fulfillment-retry`.
+
+### It used to be a GitHub Actions workflow
+
+Until issue #114 there was no `scheduled()` handler to attach a Cron Trigger to:
+`@sveltejs/adapter-cloudflare` emits a fetch-only `_worker.js`. The sweep was an
+authenticated endpoint, `POST /api/cron/fulfillment-retry`, curled every ten
+minutes by `.github/workflows/fulfillment-retry.yml`. Both are gone. Production
+timing no longer depends on GitHub's best-effort scheduler, and the
+`FULFILLMENT_RETRY_URL` repository secret is no longer read by anything and can
+be deleted.
+
+Cloudflare Queues remain the natural transport for the retry itself, and are
+still worth considering — the relay table stays the record either way, so the
+transport can be swapped underneath it.
 
 ## Schema
 

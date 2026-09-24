@@ -15,8 +15,9 @@ this codebase — the **Ammoura™** multi-tenant eCommerce platform (codenamed
     port 4236. **Do not** start a second one — use
     `http://localhost:4236` and check for a process on port 4236 before
     launching a new server.
-- **Build**: `npm run build` - Build for production (includes Cloudflare
-  adapter)
+- **Build**: `npm run build` - Build for production (Cloudflare adapter, then
+  `scripts/wrap-worker.js`, which adds the `scheduled()` handler the adapter
+  does not emit — see [docs/SCHEDULED_JOBS.md](docs/SCHEDULED_JOBS.md))
 - **Preview**: `npm run preview` - Build + preview against the remote preview
   DB; `npm run preview:local` uses the local DB (migrates + seeds first);
   `npm run preview:prod` previews against production bindings
@@ -81,8 +82,8 @@ _progress_, and "ready for review" means _done_.
 - Write commit messages in imperative mood: "Add feature" not "Added feature"
 - Include issue or ticket references when applicable (e.g., `refs #123`)
 - Keep commits logically grouped; avoid mixing unrelated changes
-- Pre-commit hooks (husky + lint-staged) run Prettier and ESLint; commits fail
-  if formatting or linting fails
+- The husky pre-commit hook runs `npm run gate` (Prettier check, ESLint,
+  svelte-check, tests); commits fail if any of them fails
 
 ## Big-Picture Architecture
 
@@ -102,12 +103,18 @@ One deployment serves many independent stores/sites. See
   tenant context from `locals` in server load functions/actions. This is the
   core isolation guarantee — never bypass it.
 - **Roles**: `admin`, `platform_engineer`, `customer` (session-based auth with
-  secure cookies; see `docs/AUTHENTICATION_SETUP.md`).
+  secure cookies; see `docs/AUTHENTICATION_SETUP.md`). A user session is only
+  honoured on the site it was created for. Only a platform engineer may grant
+  or revoke `platform_engineer` (`canAssignRole` in `$lib/server/permissions`),
+  and nobody may grant a permission they do not hold.
 
 ### Cloudflare Platform
 
 - Deployed as a Cloudflare **Worker** with static assets (`wrangler.toml`;
-  migrated from Cloudflare Pages). `main` is the built SvelteKit worker.
+  migrated from Cloudflare Pages). `main` is the built SvelteKit worker — the
+  adapter writes to that path, and `scripts/wrap-worker.js` then swaps in a
+  wrapper that adds `scheduled()` (`docs/SCHEDULED_JOBS.md`). Never point
+  `main` at a hand-written file: the adapter overwrites it.
 - **D1** (`DB` binding) is the database; **R2** (`MEDIA_BUCKET`) stores media;
   optional **KV** (`SITE_ROUTES`) caches hostname → site id routing.
 - Separate production and preview databases/buckets are configured in
@@ -153,6 +160,8 @@ One deployment serves many independent stores/sites. See
   (`docs/THEME_SYSTEM.md`)
 - **Integrations**: OAuth/SSO providers (`docs/OAUTH_SSO_SETUP.md`), Printful
   fulfillment (`docs/PRINTFUL_INTEGRATION.md`), shipping (`docs/SHIPPING.md`)
+- **Scheduled jobs**: recurring work on Cloudflare Cron Triggers, declared in
+  `src/lib/server/scheduler/registry.ts` (`docs/SCHEDULED_JOBS.md`)
 - Comprehensive docs live in `docs/`; read the relevant doc before modifying a
   core feature, and update docs when adding significant features. `llms.txt`
   and `llms-full.txt` in the repo root contain Svelte/SvelteKit documentation
@@ -231,14 +240,16 @@ Follow SvelteKit conventions:
   90%. Check with `npm run test:coverage`.
 - No failing tests allowed; `npm run check` must pass with zero TypeScript
   errors before a task is complete.
-- **`npm run prepare` is the gold standard** — run it before considering any
-  work finished. Quality gates are never skipped (exception: explicit
+- **`npm run gate` is the gold standard** (lint → `check` → tests; the
+  husky pre-commit hook runs it) — run it before considering any work
+  finished. `npm run prepare` only installs the git hooks. Quality gates are never skipped (exception: explicit
   prototypes/spikes, which must be refactored with tests afterwards).
 
 ## Security (non-negotiable)
 
 - **Never store or commit secrets in plaintext** — encrypt sensitive data at
-  rest (API keys, tokens, PII; passwords hashed with bcrypt/argon2)
+  rest (API keys, tokens, PII; passwords hashed with salted PBKDF2-SHA256 via `$lib/server/password`, on
+  the server — never accept a hash computed in the browser)
 - **Always use prepared statements** — never string-concatenate SQL
 - **Always filter by `site_id`** for tenant data (multi-tenant isolation)
 - **Log significant actions** to activity logs via

@@ -21,6 +21,7 @@ import { getEnvOAuthCredentials } from '$lib/server/oauth/env-providers.js';
 import { createOAuthProvider } from '$lib/server/oauth/providers/index.js';
 import type { OAuthProvider } from '$lib/types/oauth.js';
 import { logActivity } from '$lib/server/activity-logger';
+import { hashPassword } from '$lib/server/password';
 
 /**
  * GET /api/auth/oauth/[provider]/callback
@@ -146,17 +147,18 @@ export const GET: RequestHandler = async ({ params, url, platform, locals, cooki
       let existingUser = await getUserByEmail(db, siteId, userProfile.email);
 
       if (existingUser) {
-        // Link provider to existing user
+        // Link provider to existing user — but only on an address the provider
+        // has verified. Otherwise anyone who can register an account with an
+        // unverified email at the provider (Twitter never verifies, Discord and
+        // LinkedIn may not) could sign in as that email's owner here,
+        // including a site admin.
+        if (!userProfile.email_verified) {
+          redirect(302, `/auth/login?error=email_unverified&provider=${provider}`);
+        }
         userId = existingUser.id;
       } else {
-        // Create new user
-        // Generate a random password hash (user won't use it for SSO login)
-        const randomPassword = crypto.randomUUID();
-        const encoder = new TextEncoder();
-        const data = encoder.encode(randomPassword);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const password_hash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+        // Create new user with a random password nobody knows (SSO-only).
+        const password_hash = await hashPassword(crypto.randomUUID());
 
         existingUser = await createUser(db, siteId, {
           email: userProfile.email,
@@ -206,6 +208,7 @@ export const GET: RequestHandler = async ({ params, url, platform, locals, cooki
     const platformEngineerEmail = platform?.env?.PLATFORM_ENGINEER_EMAIL;
     if (
       platformEngineerEmail &&
+      userProfile.email_verified &&
       user.email.toLowerCase() === platformEngineerEmail.toLowerCase() &&
       user.role !== 'platform_engineer'
     ) {

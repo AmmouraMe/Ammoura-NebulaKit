@@ -196,11 +196,12 @@ When GitHub Copilot generates code for this project:
 
 ## Automated Enforcement
 
-Pre-commit hooks (Husky + lint-staged) enforce:
+The Husky pre-commit hook runs `npm run gate`, which enforces:
 
-- Prettier formatting on all JS/TS/Svelte files
-- ESLint auto-fix on commit
-- Prevents commits with formatting or linting errors
+- Prettier formatting (check only; run `npm run format` to fix)
+- ESLint
+- `svelte-check` type checking
+- The full test suite
 
 ## Next Steps
 

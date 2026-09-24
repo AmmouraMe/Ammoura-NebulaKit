@@ -862,4 +862,20 @@ describe('Pages Repository', () => {
       expect(result[0].has_unpublished_changes).toBe(false);
     });
   });
+
+  describe('getWidgetByIdForSite', () => {
+    it("joins through pages so only the site's own widgets resolve", async () => {
+      const mockFirst = vi.fn().mockResolvedValue(mockWidget);
+      const mockBind = vi.fn().mockReturnValue({ first: mockFirst });
+      const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+      const mockDB = { prepare: mockPrepare } as unknown as D1Database;
+
+      const result = await db.getWidgetByIdForSite(mockDB, 'site-1', 'w-1');
+
+      expect(result).toEqual(mockWidget);
+      expect(mockPrepare.mock.calls[0][0]).toMatch(/JOIN pages p ON p\.id = pw\.page_id/);
+      expect(mockPrepare.mock.calls[0][0]).toMatch(/p\.site_id = \?/);
+      expect(mockBind).toHaveBeenCalledWith('w-1', 'site-1');
+    });
+  });
 });

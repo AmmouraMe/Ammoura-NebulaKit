@@ -1,11 +1,10 @@
 /**
  * The retry sweep: one pass over every relay whose backoff has elapsed.
  *
- * Cloudflare Queues would be the natural transport for this, but
- * @sveltejs/adapter-cloudflare emits a fetch-only _worker.js, so neither a
- * queue consumer nor a Cron Trigger scheduled() handler has anywhere to
- * attach. The relay table is swept over HTTP instead, by
- * POST /api/cron/fulfillment-retry. See docs/FULFILLMENT_RELAY.md.
+ * Driven by the `fulfillment-retry` scheduled job, on a Cron Trigger every ten
+ * minutes. Until issue #114 there was no scheduled() handler to attach to, and
+ * a GitHub Actions workflow curled an endpoint instead. See
+ * docs/SCHEDULED_JOBS.md and docs/FULFILLMENT_RELAY.md.
  *
  * The sweep is platform-wide: it reads due relays across all sites, and each
  * retry it starts is scoped by the site_id on the row it came from.

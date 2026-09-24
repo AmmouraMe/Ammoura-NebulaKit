@@ -31,6 +31,9 @@
       case 'no_email':
         error = `${provider} did not provide an email address. Please use a different method.`;
         break;
+      case 'email_unverified':
+        error = `${provider} has not verified that email address, so it cannot be linked to an existing account. Verify it with ${provider}, or sign in with your password.`;
+        break;
       case 'account_inactive':
         error = 'Your account is inactive. Please contact support.';
         break;

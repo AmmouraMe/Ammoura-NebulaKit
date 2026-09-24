@@ -13,8 +13,7 @@
 
   // Find the icon component
   $: IconComponent = allIcons.find((i) => i.name === iconName)?.component as
-    | ComponentType<SvelteComponent>
-    | undefined;
+    ComponentType<SvelteComponent> | undefined;
 
   // Check if iconName is an emoji (simple check: single character or 2-4 chars for multi-byte emojis)
   $: isEmoji = !IconComponent && iconName && iconName.length <= 4;

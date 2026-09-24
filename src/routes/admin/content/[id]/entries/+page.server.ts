@@ -30,8 +30,7 @@ export const load: PageServerLoad = async ({ params, platform, locals, url }) =>
   const limit = 25;
   const offset = (page - 1) * limit;
   const statusFilter = (url.searchParams.get('status') || undefined) as
-    | ContentEntryStatus
-    | undefined;
+    ContentEntryStatus | undefined;
   const search = url.searchParams.get('search') || undefined;
 
   const { entries, total } = await getContentEntries(db, siteId, contentTypeId, {

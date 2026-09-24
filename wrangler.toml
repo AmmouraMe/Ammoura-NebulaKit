@@ -8,7 +8,28 @@ account_id = "7170285216abcab51100eea6730677aa"
 
 # Workers deployment with static assets (migrated from Cloudflare Pages —
 # tenancy plan §8). `wrangler deploy` after `npm run build`.
+#
+# `main` stays the adapter's own output path — adapter-cloudflare v7 WRITES to
+# whatever `main` names, so pointing this at a hand-written file silently
+# overwrites that file on the next build.
+#
+# The scheduled() handler the adapter does not emit is added after the build
+# instead: `npm run build` runs scripts/wrap-worker.js, which moves the
+# adapter's output aside and puts the wrapper (worker/entry.js) here in its
+# place. That is what lets the Cron Triggers below reach the job registry.
+# See docs/SCHEDULED_JOBS.md.
 main = ".svelte-kit/cloudflare/_worker.js"
+
+# Cron Triggers. Every expression here must be claimed by a job in
+# src/lib/server/scheduler/registry.ts, and every cron a job names must appear
+# here — registry.test.ts reads this file and asserts both directions, so the
+# two cannot drift.
+[triggers]
+crons = [
+  # Fulfillment retry sweep. Was a GitHub Actions workflow curling an
+  # endpoint until issue #114.
+  "*/10 * * * *"
+]
 
 [assets]
 binding = "ASSETS"
@@ -26,14 +47,11 @@ PLATFORM_SITES_DOMAIN = "ammoura.me"
 #     platform_engineer on their next sign-in. This is how the first superuser
 #     is created; nothing is seeded. See docs/AUTHENTICATION_SETUP.md.
 #   ENCRYPTION_KEY — encrypts stored provider credentials.
-#   CRON_SECRET — bearer token for POST /api/cron/fulfillment-retry, the
-#     fulfillment retry sweep. The Worker cannot schedule itself (the SvelteKit
-#     adapter emits a fetch-only worker), so the sweep is called on a schedule
-#     from CI. See docs/FULFILLMENT_RELAY.md.
-#   ERROR_WEBHOOK_URL — captured errors are alerted here. Without it they are
-#     still structured log lines; see docs/OBSERVABILITY.md.
-# Optional var: LOG_LEVEL (debug|info|warn|error). Unset means info in
-# production, so debug logging is off unless someone asks for it.
+#   CRON_SECRET — bearer token for POST /api/cron/run, which runs registered
+#     jobs by hand. It is NOT how the schedule works: Cron Triggers above call
+#     the Worker's own scheduled() handler, which authenticates in-process.
+#     Optional, and only worth setting if operators need to force a job.
+#     See docs/SCHEDULED_JOBS.md.
 # For local development put them in .dev.vars (see .dev.vars.example).
 
 # Tenancy (see Ammoura planning repo, plans/tenancy.md)
@@ -59,6 +77,13 @@ migrations_dir = "migrations"
 # Preview environment configuration
 [env.preview]
 name = "hermes-preview"
+
+# No scheduled work in preview. An environment that shares nothing with
+# production must not be retrying production's fulfillment relays, and an
+# unset [triggers] does not inherit the top-level one — this is explicit so
+# the intent is readable rather than inferred.
+[env.preview.triggers]
+crons = []
 
 # Preview database
 [[env.preview.d1_databases]]
@@ -93,6 +118,12 @@ preview_bucket_name = "hermes-media-preview"
 # ---------------------------------------------------------------------------
 [env.dev-staging]
 name = "hermes-dev-staging"
+
+# Staging runs no scheduled jobs, for the same reason preview does not: it has
+# its own D1 and its own R2, and a sweep here would act on test orders with
+# real provider credentials.
+[env.dev-staging.triggers]
+crons = []
 
 [env.dev-staging.vars]
 # The staging host is its own platform domain, not a slug under ammoura.me.

@@ -7,11 +7,7 @@ import { execute, executeOne, generateId, getCurrentTimestamp } from './connecti
 
 export type SiteDomainKind = 'platform' | 'custom';
 export type SiteDomainStatus =
-  | 'pending_dns'
-  | 'pending_validation'
-  | 'active'
-  | 'error'
-  | 'removed';
+  'pending_dns' | 'pending_validation' | 'active' | 'error' | 'removed';
 
 export interface SiteDomain {
   id: string;

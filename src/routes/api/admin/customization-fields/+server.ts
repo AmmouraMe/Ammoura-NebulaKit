@@ -141,12 +141,7 @@ export const PUT: RequestHandler = async ({ request, platform, locals }) => {
     const field = await updateCustomizationField(db, siteId, id, {
       ...updateData,
       fieldType: updateData.fieldType as
-        | 'text'
-        | 'textarea'
-        | 'select'
-        | 'color'
-        | 'number'
-        | undefined
+        'text' | 'textarea' | 'select' | 'color' | 'number' | undefined
     });
 
     if (!field) {

@@ -167,12 +167,7 @@
       flexJustifyContent: setResponsiveValue(
         config.flexJustifyContent,
         value as
-          | 'flex-start'
-          | 'center'
-          | 'flex-end'
-          | 'space-between'
-          | 'space-around'
-          | 'space-evenly'
+          'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly'
       )
     });
   }

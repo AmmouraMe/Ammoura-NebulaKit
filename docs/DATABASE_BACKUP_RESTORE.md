@@ -77,12 +77,13 @@ npm run db:restore -- --file <backup.sql> --to <target>
 ```
 
 **Targets:**
-| Target | Description | Safety |
-|--------|-------------|--------|
-| `staging` | Cloud staging database | ✅ Safe |
-| `local` | Local development database | ✅ Safe |
-| `preview` | Cloud preview database | ⚠️ Careful |
-| `production` | Production database | 🛑 Requires `--confirm` |
+
+| Target       | Description                | Safety                  |
+| ------------ | -------------------------- | ----------------------- |
+| `staging`    | Cloud staging database     | ✅ Safe                 |
+| `local`      | Local development database | ✅ Safe                 |
+| `preview`    | Cloud preview database     | ⚠️ Careful              |
+| `production` | Production database        | 🛑 Requires `--confirm` |
 
 **Options:**
 
