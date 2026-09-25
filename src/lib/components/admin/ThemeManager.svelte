@@ -1746,8 +1746,8 @@
                       {:else if colorHarmonyMode === 'tetradic'}
                         <p>
                           <strong>Tetradic (Square):</strong> Primary + complement with balanced intermediates
-                          (90°). Rich, sophisticated palette with strong contrast. Best for complex,
-                          multi-layered designs.
+                          (90°). Rich, sophisticated palette with strong contrast. Best for complex, multi-layered
+                          designs.
                         </p>
                       {:else if colorHarmonyMode === 'analogous'}
                         <p>

@@ -3149,8 +3149,8 @@
                 />
               </label>
               <p class="field-hint">
-                Maximum number of features to display on {currentBreakpoint} devices. Leave empty to
-                show all.
+                Maximum number of features to display on {currentBreakpoint} devices. Leave empty to show
+                all.
               </p>
             </div>
           {:else if component.type === 'navbar' && config.navbarPadding}

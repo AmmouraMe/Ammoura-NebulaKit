@@ -6,7 +6,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB, getUserById, updateUser, deleteUser, type UpdateUserData } from '$lib/server/db';
-import { canPerformAction, isUserAccountActive } from '$lib/server/permissions';
+import {
+  canAssignRole,
+  canGrantPermissions,
+  canPerformAction,
+  isUserAccountActive,
+  parseUserPermissions
+} from '$lib/server/permissions';
 import { createActivityLog } from '$lib/server/db/activity-logs';
 
 /**
@@ -79,9 +85,24 @@ export const PUT: RequestHandler = async ({ params, request, platform, locals })
       return json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    const data = (await request.json()) as UpdateUserData & {
+    // A password hash is never accepted from the client; see POST.
+    const { password_hash: _clientHash, ...data } = (await request.json()) as UpdateUserData & {
+      password_hash?: unknown;
       expiration_date?: string | number | null;
     };
+
+    if (!canAssignRole(currentUser, data.role, existingUser.role)) {
+      return json(
+        { success: false, error: 'Insufficient permissions to assign that role' },
+        { status: 403 }
+      );
+    }
+    if (!canGrantPermissions(currentUser, data.permissions, parseUserPermissions(existingUser))) {
+      return json(
+        { success: false, error: 'Cannot grant permissions you do not have' },
+        { status: 403 }
+      );
+    }
 
     // Convert expiration_date to timestamp if it's a date string
     const updateData: UpdateUserData = { ...data };

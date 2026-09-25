@@ -193,3 +193,53 @@ export async function getUserAllPermissions(db: D1Database, user: DBUser): Promi
 
   return Array.from(permissions);
 }
+
+/**
+ * Whether `actor` may move a user from `previousRole` to `nextRole`.
+ *
+ * `platform_engineer` sees every site on the platform (`/admin/sites`,
+ * `/admin/database`), so a tenant admin must never be able to mint one — only
+ * an existing platform engineer may grant or revoke it. Every other role
+ * change needs `users:roles`. Leaving the role unchanged is always allowed.
+ */
+export function canAssignRole(
+  actor: DBUser,
+  nextRole: string | undefined | null,
+  previousRole?: string | null
+): boolean {
+  if (!nextRole || nextRole === previousRole) {
+    return true;
+  }
+  if (nextRole === 'platform_engineer' || previousRole === 'platform_engineer') {
+    return actor.role === 'platform_engineer' && isUserAccountActive(actor);
+  }
+  return canPerformAction(actor, 'users:roles');
+}
+
+/**
+ * Whether `actor` may create a new user with `role`. Creating users is already
+ * gated on `users:write`; the one role that needs more is `platform_engineer`,
+ * which only an existing platform engineer may hand out.
+ */
+export function canCreateWithRole(actor: DBUser, role: string | undefined | null): boolean {
+  if (role !== 'platform_engineer') {
+    return true;
+  }
+  return actor.role === 'platform_engineer' && isUserAccountActive(actor);
+}
+
+/**
+ * Whether `actor` may give a user this permission list. An actor can only
+ * hand out permissions they hold themselves; permissions the user already
+ * had (`previous`) may be kept as they are.
+ */
+export function canGrantPermissions(
+  actor: DBUser,
+  next: readonly string[] | undefined | null,
+  previous: readonly string[] = []
+): boolean {
+  if (!next) {
+    return true;
+  }
+  return next.every((p) => previous.includes(p) || canPerformAction(actor, p));
+}

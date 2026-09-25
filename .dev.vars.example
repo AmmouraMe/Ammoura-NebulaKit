@@ -22,3 +22,13 @@ PLATFORM_SITES_DOMAIN=localhost
 #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # See docs/FULFILLMENT_RELAY.md.
 CRON_SECRET=your_generated_cron_secret_here
+
+# Log level: debug | info | warn | error.
+# Unset means debug in dev and info in production, so debug logging is off
+# where it matters. See docs/OBSERVABILITY.md.
+# LOG_LEVEL=debug
+
+# Captured errors are POSTed here as {"content": "..."} — a Discord channel
+# webhook works as-is. Unset means errors are structured log lines only.
+# In production this is a Worker secret, not a var.
+# ERROR_WEBHOOK_URL=https://discord.com/api/webhooks/...

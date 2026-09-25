@@ -5,9 +5,17 @@ declare global {
   const __APP_VERSION__: string;
 
   namespace App {
-    // interface Error {}
+    interface Error {
+      message: string;
+      /** Echoed to the visitor so a report can be matched to a log line. */
+      requestId?: string;
+    }
     interface Locals {
       siteId: string;
+      /** One id per request; also returned as the `x-request-id` header. */
+      requestId: string;
+      /** Request-scoped structured logger, pre-bound with site and route. */
+      log: import('$lib/server/observability').Logger;
       /** Resolved locale for this request (cookie → Accept-Language → site default) */
       locale: string;
       /** The site's language configuration (validated against supported locales) */

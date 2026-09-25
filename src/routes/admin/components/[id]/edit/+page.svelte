@@ -7,9 +7,7 @@
 
   // Type assertion for form data (this route is deprecated, use /admin/builder/component instead)
   const formData = form as
-    | { error?: string; name?: string; description?: string; success?: boolean }
-    | null
-    | undefined;
+    { error?: string; name?: string; description?: string; success?: boolean } | null | undefined;
 
   const widgetTypeLabels: Record<string, string> = {
     hero: 'Hero',

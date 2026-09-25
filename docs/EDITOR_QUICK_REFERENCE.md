@@ -175,9 +175,7 @@ import EditorToolbar from '$lib/components/admin/EditorToolbar.svelte';
 
 test('renders toolbar', () => {
   const { getByText } = render(EditorToolbar, {
-    props: {
-      /* props */
-    }
+    props: {/* props */}
   });
 });
 ```

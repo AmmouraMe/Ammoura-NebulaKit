@@ -402,6 +402,25 @@ export async function getWidgetById(
 }
 
 /**
+ * Get a widget by ID, but only when its page belongs to `siteId`. Widget ids
+ * carry no site of their own, so every API that takes one must come through
+ * here or another tenant's widget is one guessed id away.
+ */
+export async function getWidgetByIdForSite(
+  db: D1Database,
+  siteId: string,
+  widgetId: string
+): Promise<DBPageWidget | null> {
+  return await executeOne<DBPageWidget>(
+    db,
+    `SELECT pw.* FROM page_widgets pw
+     JOIN pages p ON p.id = pw.page_id
+     WHERE pw.id = ? AND p.site_id = ?`,
+    [widgetId, siteId]
+  );
+}
+
+/**
  * Create a new component for a page
  */
 export async function createPageComponent(

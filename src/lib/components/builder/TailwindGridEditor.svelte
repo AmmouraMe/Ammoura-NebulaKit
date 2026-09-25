@@ -172,13 +172,7 @@
       gridJustifyContent: setResponsiveValue(
         config.gridJustifyContent,
         value as
-          | 'start'
-          | 'center'
-          | 'end'
-          | 'stretch'
-          | 'space-between'
-          | 'space-around'
-          | 'space-evenly'
+          'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'
       )
     });
   }
@@ -188,13 +182,7 @@
       gridAlignContent: setResponsiveValue(
         config.gridAlignContent,
         value as
-          | 'start'
-          | 'center'
-          | 'end'
-          | 'stretch'
-          | 'space-between'
-          | 'space-around'
-          | 'space-evenly'
+          'start' | 'center' | 'end' | 'stretch' | 'space-between' | 'space-around' | 'space-evenly'
       )
     });
   }

@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
+  getLayout,
   updateLayout,
   updateLayoutComponents,
   getLayoutComponents,
@@ -23,6 +24,12 @@ export const PUT: RequestHandler = async ({ request, locals, platform, params })
 
   if (isNaN(layoutId)) {
     throw error(400, 'Invalid layout ID');
+  }
+
+  // updateLayout is site-scoped, but the widget writes below key on the
+  // layout id alone — check ownership once, up front.
+  if (!(await getLayout(platform.env.DB, siteId, layoutId))) {
+    throw error(404, 'Layout not found');
   }
 
   try {
@@ -91,7 +98,7 @@ export const PUT: RequestHandler = async ({ request, locals, platform, params })
 
       // Update existing components
       if (componentsToUpdate.length > 0) {
-        await updateLayoutComponents(platform.env.DB, componentsToUpdate);
+        await updateLayoutComponents(platform.env.DB, layoutId, componentsToUpdate);
       }
     }
 

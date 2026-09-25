@@ -191,17 +191,7 @@ export interface SpacingConfig {
 export interface TypographyConfig {
   fontSize?: number;
   fontWeight?:
-    | 'normal'
-    | 'bold'
-    | '100'
-    | '200'
-    | '300'
-    | '400'
-    | '500'
-    | '600'
-    | '700'
-    | '800'
-    | '900';
+    'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
   fontStyle?: 'normal' | 'italic' | 'oblique';
   lineHeight?: number;
   letterSpacing?: number;
@@ -704,20 +694,10 @@ export interface ComponentConfig {
   containerGapX?: ResponsiveValue<number>; // Horizontal gap
   containerGapY?: ResponsiveValue<number>; // Vertical gap
   containerJustifyContent?:
-    | 'flex-start'
-    | 'center'
-    | 'flex-end'
-    | 'space-between'
-    | 'space-around'
-    | 'space-evenly';
+    'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
   containerAlignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch' | 'baseline';
   containerAlignContent?:
-    | 'flex-start'
-    | 'center'
-    | 'flex-end'
-    | 'stretch'
-    | 'space-between'
-    | 'space-around';
+    'flex-start' | 'center' | 'flex-end' | 'stretch' | 'space-between' | 'space-around';
   containerWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
   containerFlexDirection?: ResponsiveValue<'row' | 'column' | 'row-reverse' | 'column-reverse'>;
 
@@ -772,12 +752,7 @@ export interface ComponentConfig {
   // Row component - horizontal flexbox layout
   rowGap?: ResponsiveValue<number>;
   rowJustifyContent?:
-    | 'flex-start'
-    | 'center'
-    | 'flex-end'
-    | 'space-between'
-    | 'space-around'
-    | 'space-evenly';
+    'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
   rowAlignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch' | 'baseline';
   rowFlexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
   rowPadding?: ResponsiveValue<SpacingConfig>;
@@ -964,8 +939,10 @@ export interface RevisionNode extends ParsedPageRevision {
 }
 
 // Parsed revision with components as objects (widgets_snapshot parsed to components)
-export interface ParsedPageRevision
-  extends Omit<PageRevision, 'widgets_snapshot' | 'page_properties'> {
+export interface ParsedPageRevision extends Omit<
+  PageRevision,
+  'widgets_snapshot' | 'page_properties'
+> {
   components: PageComponent[];
   pageProperties?: PageProperties;
 }

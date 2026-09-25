@@ -304,9 +304,7 @@ POST /api/orders
     "zipCode": "12345",
     "country": "US"
   },
-  "billing_address": {
-    /* same structure as shipping_address */
-  },
+  "billing_address": {/* same structure as shipping_address */},
   "payment_method": {
     "type": "credit-card",
     "cardNumber": "5555 5555 5555 5555",

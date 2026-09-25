@@ -202,8 +202,7 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
     const revisionChildren =
       r.data.children ||
       ((r.data.config as Record<string, unknown> | undefined)?.children as
-        | ComponentChildData[]
-        | undefined);
+        ComponentChildData[] | undefined);
 
     return {
       id: r.id,

@@ -44,13 +44,7 @@ export interface UpdateRoleData {
 }
 
 export type PermissionCategory =
-  | 'orders'
-  | 'products'
-  | 'reports'
-  | 'settings'
-  | 'users'
-  | 'pages'
-  | 'logs';
+  'orders' | 'products' | 'reports' | 'settings' | 'users' | 'pages' | 'logs';
 
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   'orders',
