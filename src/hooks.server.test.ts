@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { handle, isOwnerOnlyRequest } from './hooks.server';
+import { handle, isOwnerOnlyRequest, resolveRequestId } from './hooks.server';
 import type { RequestEvent } from '@sveltejs/kit';
 
 describe('isOwnerOnlyRequest', () => {
@@ -239,5 +239,29 @@ describe('Server Hooks', () => {
         expect(mockBind).toHaveBeenCalledWith(hostname);
       }
     });
+  });
+});
+
+describe('resolveRequestId', () => {
+  it('mints an id when the request carries none', () => {
+    const id = resolveRequestId(null);
+    expect(id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('honours an inbound id so a trace survives a hop', () => {
+    expect(resolveRequestId('abc-123_XYZ')).toBe('abc-123_XYZ');
+  });
+
+  it('strips anything that could be injected into a log line', () => {
+    // The id lands in JSON log lines; a caller does not get to write those.
+    expect(resolveRequestId('a"b\nc {"level":"error"}')).toBe('abclevelerror');
+  });
+
+  it('caps the length rather than carrying an arbitrary header', () => {
+    expect(resolveRequestId('x'.repeat(200))).toHaveLength(64);
+  });
+
+  it('mints a fresh id when the inbound value scrubs away to nothing', () => {
+    expect(resolveRequestId('!!!!')).toMatch(/^[0-9a-f-]{36}$/);
   });
 });

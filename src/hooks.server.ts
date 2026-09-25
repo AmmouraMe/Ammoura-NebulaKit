@@ -1,4 +1,4 @@
-import { json, type Handle } from '@sveltejs/kit';
+import { json, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { getDB, getAccountBySessionToken, getUserBySessionToken } from '$lib/server/db';
 import { ACCOUNT_SESSION_COOKIE } from '$lib/server/db/account-sessions';
 import { USER_SESSION_COOKIE } from '$lib/server/db/user-sessions';
@@ -7,6 +7,7 @@ import { resolveSiteIdForHostname } from '$lib/server/site-routing';
 import { getPlatformSitesDomain } from '$lib/server/sites-service';
 import { resolveLocale, isSupportedLocale, LOCALE_COOKIE, DEFAULT_LOCALE } from '$lib/i18n';
 import { dev } from '$app/environment';
+import { createLogger, reportError, resolveLogLevel } from '$lib/server/observability';
 
 /**
  * SvelteKit hooks for multi-tenant site handling and authentication
@@ -68,7 +69,34 @@ export function isOwnerOnlyRequest(pathname: string, method: string | undefined)
   );
 }
 
+/**
+ * One id per request, echoed on the response as `x-request-id`. Every log line
+ * from this request carries it, so a report of "it broke at 14:02" can be
+ * turned into the exact request that broke (issue #75).
+ *
+ * An inbound `x-request-id` is honoured so a trace survives a hop, but it is
+ * length-capped and stripped of anything but url-safe characters — it ends up
+ * in log lines, and a caller does not get to inject into those.
+ */
+export function resolveRequestId(inbound: string | null | undefined): string {
+  const cleaned = (inbound ?? '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+  return cleaned || crypto.randomUUID();
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
+  const startedAt = Date.now();
+  event.locals.requestId = resolveRequestId(event.request?.headers?.get('x-request-id'));
+  event.locals.log = createLogger({
+    level: resolveLogLevel(event.platform?.env?.LOG_LEVEL, dev),
+    context: {
+      requestId: event.locals.requestId,
+      route: event.url.pathname,
+      method: event.request?.method,
+      release: __APP_VERSION__,
+      environment: dev ? 'development' : 'production'
+    }
+  });
+
   // Get the hostname from the request
   const hostname = event.url.hostname;
 
@@ -152,6 +180,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   // Set the site ID in locals for use in endpoints and pages
   event.locals.siteId = siteId;
+  // Now that the tenant is known, every later line carries it.
+  event.locals.log = event.locals.log.child({ siteId });
 
   // Locale resolution (i18n core): explicit cookie choice → Accept-Language →
   // site default → platform default. The site's language settings come from
@@ -191,9 +221,9 @@ export const handle: Handle = async ({ event, resolve }) => {
         event.cookies.delete(ACCOUNT_SESSION_COOKIE, { path: '/' });
       }
     } catch (error) {
-      if (!dev) {
-        console.error('Error resolving account session:', error);
-      }
+      event.locals.log.warn('account session lookup failed', {
+        cause: error instanceof Error ? error.message : String(error)
+      });
     }
   }
 
@@ -234,9 +264,9 @@ export const handle: Handle = async ({ event, resolve }) => {
         event.cookies.delete(USER_SESSION_COOKIE, { path: '/' });
       }
     } catch (error) {
-      if (!dev) {
-        console.error('Error resolving user session:', error);
-      }
+      event.locals.log.warn('user session lookup failed', {
+        cause: error instanceof Error ? error.message : String(error)
+      });
     }
   }
 
@@ -248,8 +278,53 @@ export const handle: Handle = async ({ event, resolve }) => {
     return json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  return resolve(event, {
+  // Role rather than identity: enough to know an admin hit it, without
+  // keeping the user (issue #75, Privacy).
+  event.locals.log = event.locals.log.child({
+    userRole: event.locals.currentUser?.role ?? (event.locals.account ? 'account' : 'anonymous')
+  });
+
+  const response = await resolve(event, {
     // app.html carries lang="%lang%"; emit the resolved locale
     transformPageChunk: ({ html }) => html.replace('%lang%', event.locals.locale)
   });
+
+  response.headers.set('x-request-id', event.locals.requestId);
+
+  // Static assets would bury everything else, and they are already in
+  // Cloudflare's own request logs.
+  if (!event.url.pathname.startsWith('/_app/')) {
+    event.locals.log.info('request', {
+      status: response.status,
+      durationMs: Date.now() - startedAt
+    });
+  }
+
+  return response;
+};
+
+/**
+ * Anything that escapes a load function, endpoint or render. SvelteKit calls
+ * this for unhandled server errors — it does not call it for `error(404)` and
+ * other thrown HttpErrors, which are control flow rather than defects.
+ *
+ * The returned shape is what `+error.svelte` renders, so it carries the request
+ * id: a visitor can quote it and it maps to the log line.
+ */
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
+  const logger =
+    event?.locals?.log ??
+    createLogger({ level: resolveLogLevel(event?.platform?.env?.LOG_LEVEL, dev) });
+
+  reportError(
+    error,
+    { ...logger.context, status },
+    {
+      logger,
+      webhookUrl: event?.platform?.env?.ERROR_WEBHOOK_URL as string | undefined,
+      waitUntil: event?.platform?.context?.waitUntil?.bind(event.platform.context)
+    }
+  );
+
+  return { message, requestId: event?.locals?.requestId };
 };

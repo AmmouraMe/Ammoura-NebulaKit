@@ -3,6 +3,13 @@ import { GET, POST, DELETE, PATCH } from './+server';
 import type { RequestHandler } from './$types';
 import type { AISession } from '$lib/types/ai-chat';
 import type { DBUser } from '$lib/server/db/users';
+import { createLogger } from '$lib/server/observability';
+
+/** Locals now carry a request id and a logger (hooks.server.ts). */
+const observabilityLocals = {
+  requestId: 'test-request',
+  log: createLogger({ level: 'error', sink: { debug() {}, info() {}, warn() {}, error() {} } })
+};
 
 type ExtractRequestEvent<T> = T extends (event: infer E) => unknown ? E : never;
 type MockRequestEvent = ExtractRequestEvent<RequestHandler>;
@@ -83,7 +90,8 @@ describe('AI Chat Sessions API', () => {
         siteId: 'site-1',
         isAdmin: true,
         locale: 'en',
-        i18n: { defaultLocale: 'en', enabledLocales: ['en'] }
+        i18n: { defaultLocale: 'en', enabledLocales: ['en'] },
+        ...observabilityLocals
       },
       url: new URL('http://localhost/api/ai-chat/sessions'),
       request: new Request('http://localhost/api/ai-chat/sessions')
@@ -118,7 +126,8 @@ describe('AI Chat Sessions API', () => {
         siteId: 'site-1',
         isAdmin: false,
         locale: 'en',
-        i18n: { defaultLocale: 'en', enabledLocales: ['en'] }
+        i18n: { defaultLocale: 'en', enabledLocales: ['en'] },
+        ...observabilityLocals
       };
 
       await expect(GET(mockEvent as MockRequestEvent)).rejects.toThrow();
@@ -130,7 +139,8 @@ describe('AI Chat Sessions API', () => {
         siteId: 'site-1',
         isAdmin: false,
         locale: 'en',
-        i18n: { defaultLocale: 'en', enabledLocales: ['en'] }
+        i18n: { defaultLocale: 'en', enabledLocales: ['en'] },
+        ...observabilityLocals
       };
 
       await expect(GET(mockEvent as MockRequestEvent)).rejects.toThrow();
