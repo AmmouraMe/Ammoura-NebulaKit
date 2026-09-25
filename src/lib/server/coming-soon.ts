@@ -109,12 +109,7 @@ export interface GateDecision {
   gated: boolean;
   /** Why not, for the tests and for anyone reading a log. */
   reason:
-    | 'gated'
-    | 'not-enabled'
-    | 'exempt-path'
-    | 'owner'
-    | 'data-request'
-    | 'non-document-request';
+    'gated' | 'not-enabled' | 'exempt-path' | 'owner' | 'data-request' | 'non-document-request';
 }
 
 export interface GateInput {
