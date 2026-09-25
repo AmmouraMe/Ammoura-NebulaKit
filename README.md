@@ -4,7 +4,7 @@ _(codenamed Hermes during development)_
 
 | Statements                                                                              | Branches                                                                            | Functions                                                                             | Lines                                                                         |
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| ![Statements](https://img.shields.io/badge/statements-95%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-92%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-96%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-95%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-96%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-92%25-brightgreen.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-96%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-96%25-brightgreen.svg?style=flat) |
 
 Hermes is a modern multi-tenant eCommerce platform built with SvelteKit and
 TypeScript, deployed as a Cloudflare Worker with D1 database and R2 storage. It
