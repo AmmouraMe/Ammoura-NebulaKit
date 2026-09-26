@@ -1,6 +1,7 @@
 <script lang="ts">
   import { checkoutStore } from '../stores/checkout';
   import type { ShippingAddress } from '../types/checkout';
+  import CountrySelect from './CountrySelect.svelte';
 
   export let errors: Partial<Record<keyof ShippingAddress, string>> = {};
 
@@ -136,20 +137,12 @@
 
     <div class="form-group">
       <label for="country">Country *</label>
-      <select
+      <CountrySelect
         id="country"
         value={formData.country}
-        on:change={(e) => updateField('country', e.currentTarget.value)}
-        class:error={errors.country}
-      >
-        <option value="United States">United States</option>
-        <option value="Canada">Canada</option>
-        <option value="United Kingdom">United Kingdom</option>
-        <option value="Australia">Australia</option>
-        <option value="Germany">Germany</option>
-        <option value="France">France</option>
-        <option value="Other">Other</option>
-      </select>
+        hasError={Boolean(errors.country)}
+        onChange={(code) => updateField('country', code)}
+      />
       {#if errors.country}
         <span class="error-message">{errors.country}</span>
       {/if}
@@ -193,7 +186,7 @@
   }
 
   .form-group input,
-  .form-group select {
+  .form-group :global(select) {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--color-border-secondary);
@@ -208,14 +201,14 @@
   }
 
   .form-group input:focus,
-  .form-group select:focus {
+  .form-group :global(select:focus) {
     outline: none;
     border-color: var(--color-border-focus);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
 
   .form-group input.error,
-  .form-group select.error {
+  .form-group :global(select.error) {
     border-color: var(--color-danger);
   }
 

@@ -108,15 +108,20 @@ export const BUILTIN_LAYOUTS: BuiltinLayoutDefinition[] = [
     description: 'Basic layout with header, content area, and footer',
     isDefault: true,
     getWidgets: getDefaultLayoutWidgets
+  },
+  {
+    // Enabled for the coming-soon holding page, which must not wear the site's
+    // navbar and footer: while the gate is up every link in them answers 503,
+    // so a holding page carrying them is a page of dead ends. getMinimalLayout-
+    // Widgets has said "useful for custom pages that don't need navbar/footer"
+    // since it was written; this is that page.
+    slug: 'minimal',
+    name: 'Minimal Layout',
+    description: 'Just the content area — no navbar, no footer',
+    isDefault: false,
+    getWidgets: getMinimalLayoutWidgets
   }
   // Future layouts can be added here:
-  // {
-  //   slug: 'minimal',
-  //   name: 'Minimal Layout',
-  //   description: 'Clean layout with just the content area',
-  //   isDefault: false,
-  //   getWidgets: getMinimalLayoutWidgets
-  // },
   // {
   //   slug: 'header-only',
   //   name: 'Header Only Layout',

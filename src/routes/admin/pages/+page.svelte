@@ -116,7 +116,7 @@
 </script>
 
 <svelte:head>
-  <title>Pages - Hermes Admin</title>
+  <title>Pages - Ammoura Admin</title>
 </svelte:head>
 
 <div class="pages-container">

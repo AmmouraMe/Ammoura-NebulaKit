@@ -175,7 +175,7 @@ async function backupRemote() {
 }
 
 async function main() {
-  console.log('🗄️  Hermes Database Backup Tool\n');
+  console.log('🗄️  Ammoura Database Backup Tool\n');
   console.log('═'.repeat(50));
 
   if (isLocal) {

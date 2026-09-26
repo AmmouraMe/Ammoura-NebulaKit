@@ -17,6 +17,7 @@
   import TailwindContainerEditor from '../builder/TailwindContainerEditor.svelte';
   import ChildLayoutEditor from '../builder/ChildLayoutEditor.svelte';
   import UniversalStyleEditor from '../builder/UniversalStyleEditor.svelte';
+  import MotionEditor from '../builder/MotionEditor.svelte';
   import ToggleSwitch from '../ToggleSwitch.svelte';
   import { GripVertical, Trash2 } from 'lucide-svelte';
   import { getThemeColors } from '$lib/utils/editor/colorThemes';
@@ -26,6 +27,17 @@
   export let colorTheme: ColorTheme = 'default';
   export let colorThemes: ColorThemeDefinition[] = [];
   export let onUpdate: (config: ComponentConfig) => void;
+
+  /**
+   * Motion edits come back as an event rather than a binding, and the handler
+   * lives here rather than inline in the template: `CustomEvent<ComponentConfig>`
+   * written as an inline annotation is parsed as markup at the first angle
+   * bracket.
+   */
+  function handleMotionUpdate(event: CustomEvent<ComponentConfig>): void {
+    config = event.detail;
+    handleImmediateUpdate();
+  }
   export let onDeleteChild: ((childId: string) => void) | undefined = undefined;
   // Context from parent - when this component is a child of a container
   export let parentDisplayMode: 'flex' | 'grid' | 'block' | undefined = undefined;
@@ -1193,6 +1205,79 @@
                   <option value="right">Right</option>
                 </select>
               </label>
+            </div>
+          </div>
+        {:else if component.type === 'scene'}
+          <div class="section">
+            <h4>Backdrop</h4>
+            <div class="form-group">
+              <label>
+                <span>Variant</span>
+                <select bind:value={config.sceneVariant} on:change={handleImmediateUpdate}>
+                  <option value="stars">Starfield</option>
+                  <option value="aurora">Aurora</option>
+                  <option value="grid">Perspective grid</option>
+                </select>
+              </label>
+              <p class="field-hint">
+                Drawn from the theme's own colours, so it restyles with the site rather than pinning
+                a palette into the page. Put content inside this component to sit it over the
+                backdrop.
+              </p>
+            </div>
+            <div class="form-group">
+              <label>
+                <span>Height</span>
+                <input
+                  type="text"
+                  bind:value={config.sceneHeight}
+                  on:input={handleImmediateUpdate}
+                  placeholder="420px"
+                />
+              </label>
+              <p class="field-hint">Any CSS length — 420px, 60vh, 100dvh.</p>
+            </div>
+            <div class="form-group">
+              <label>
+                <span>Density ({config.sceneDensity ?? 50})</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  bind:value={config.sceneDensity}
+                  on:input={handleImmediateUpdate}
+                />
+              </label>
+            </div>
+            <div class="form-group">
+              <label>
+                <span>Speed ({config.sceneSpeed ?? 50})</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  bind:value={config.sceneSpeed}
+                  on:input={handleImmediateUpdate}
+                />
+              </label>
+              <p class="field-hint">
+                Halfway along each slider is the designed value. The scene holds still for a visitor
+                who has asked for reduced motion, whatever these say.
+              </p>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  bind:checked={config.scenePointerParallax}
+                  on:change={handleImmediateUpdate}
+                />
+                <span>Follow the pointer</span>
+              </label>
+              <p class="field-hint">
+                The backdrop drifts a little with the cursor. It has no effect on a touch screen,
+                and none under reduced motion.
+              </p>
             </div>
           </div>
         {:else if component.type === 'divider'}
@@ -3195,6 +3280,16 @@
             />
           </div>
         {/if}
+
+        <!-- Motion. Above visibility because it is the one people come to this
+             tab looking for; visibility is a rule you set once. -->
+        <div class="section motion-section">
+          <h4>Motion</h4>
+          <p class="section-description">
+            How this component arrives and how it behaves as the page scrolls.
+          </p>
+          <MotionEditor {config} componentType={component.type} on:update={handleMotionUpdate} />
+        </div>
 
         <div class="section visibility-section">
           <h4>Visibility Controls</h4>

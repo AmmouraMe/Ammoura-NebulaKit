@@ -44,6 +44,8 @@ export const RESERVED_SLUGS = new Set([
   'stripe',
   'webhooks',
   'ammoura',
+  // The platform's codename until 2026-09-22. Still reserved: it names live
+  // Cloudflare resources and old links, so no tenant should be able to take it.
   'hermes',
   'default-site'
 ]);

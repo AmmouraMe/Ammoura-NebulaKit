@@ -2,6 +2,10 @@
  * Page and Component types for WYSIWYG page editor
  */
 
+import type { AmbientConfig, MotionConfig, ScrollEffectConfig } from '$lib/utils/motion';
+
+export type { AmbientConfig, MotionConfig, ScrollEffectConfig };
+
 export type PageStatus = 'draft' | 'published';
 
 export type ComponentType =
@@ -23,6 +27,7 @@ export type ComponentType =
   | 'navbar'
   | 'footer'
   | 'theme_toggle' // Light/dark theme toggle button
+  | 'scene' // Generative ambient backdrop (starfield, aurora, grid)
   | 'yield' // Special component type for layouts - renders page content
   | 'container' // Container with padding and background
   | 'composite' // Multi-part component composition
@@ -257,6 +262,11 @@ export interface FilterConfig {
   sepia?: number;
 }
 
+/**
+ * @deprecated Declared but never rendered — no code has ever read it. Use
+ * `ComponentConfig.motion` / `.ambient` / `.scrollEffect` instead, which the
+ * builder can edit and `$lib/utils/motion.ts` actually turns into CSS.
+ */
 // Transition configuration
 export interface TransitionConfig {
   property?: string;
@@ -265,6 +275,9 @@ export interface TransitionConfig {
   delay?: number;
 }
 
+/**
+ * @deprecated Declared but never rendered. See the note on TransitionConfig.
+ */
 // Animation configuration
 export interface AnimationConfig {
   name?: string;
@@ -338,8 +351,17 @@ export interface ComponentConfig {
   transform?: ResponsiveValue<TransformConfig>;
   filter?: ResponsiveValue<FilterConfig>;
   backdropFilter?: ResponsiveValue<FilterConfig>;
-  transition?: TransitionConfig | TransitionConfig[]; // Support multiple transitions
-  animation?: AnimationConfig | AnimationConfig[]; // Support multiple animations
+  /** @deprecated Never rendered. Use `motion` / `ambient` / `scrollEffect`. */
+  transition?: TransitionConfig | TransitionConfig[];
+  /** @deprecated Never rendered. Use `motion` / `ambient` / `scrollEffect`. */
+  animation?: AnimationConfig | AnimationConfig[];
+
+  // Motion — see $lib/utils/motion.ts. All three are independent and may be
+  // combined on one component; all three do nothing at all for a visitor who
+  // has asked for reduced motion or who has no JavaScript.
+  motion?: MotionConfig; // One-shot entrance, on scroll or on load
+  ambient?: AmbientConfig; // Looping keyframe animation
+  scrollEffect?: ScrollEffectConfig; // Parallax and --scroll-progress
   position?: ResponsiveValue<PositionConfig>;
   overflow?: ResponsiveValue<OverflowConfig>;
   opacity?: ResponsiveValue<number>;
@@ -513,6 +535,14 @@ export interface ComponentConfig {
 
   // Theme toggle component
   toggleVariant?: 'icon' | 'icon-label' | 'button';
+
+  // Scene component — a generative ambient backdrop. See $lib/utils/scene.ts.
+  sceneVariant?: 'stars' | 'aurora' | 'grid';
+  sceneDensity?: number; // 0..100, 50 is the designed density
+  sceneSpeed?: number; // 0..100, 50 is the designed speed
+  scenePointerParallax?: boolean; // Default true; ignored under reduced motion
+  sceneColors?: string[]; // Theme refs or hexes; the scene picks from the list
+  sceneHeight?: string; // CSS length; the box the scene fills
 
   // Features component
   features?: Array<{

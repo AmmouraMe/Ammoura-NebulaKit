@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { DEFAULT_STORE_NAME } from '$lib/branding';
 import { encrypt, decrypt } from '../crypto.js';
 
 export interface SiteSetting {
@@ -238,7 +239,7 @@ export async function getGeneralSettings(db: D1Database, siteId: string): Promis
   const settingsMap = new Map(settings.map((s) => [s.setting_key, s.setting_value]));
 
   return {
-    storeName: settingsMap.get('general_store_name') || 'Hermes eCommerce',
+    storeName: settingsMap.get('general_store_name') || DEFAULT_STORE_NAME,
     tagline: settingsMap.get('general_tagline') || '',
     description: settingsMap.get('general_description') || '',
     storeEmail: settingsMap.get('general_store_email') || '',
@@ -299,8 +300,17 @@ export async function getLanguageSettings(
   siteId: string
 ): Promise<LanguageSettings> {
   const settings = await getSiteSettings(db, siteId);
-  const settingsMap = new Map(settings.map((s) => [s.setting_key, s.setting_value]));
+  return readLanguageSettings(new Map(settings.map((s) => [s.setting_key, s.setting_value])));
+}
 
+/**
+ * The parsing half of getLanguageSettings, over an already-loaded settings map.
+ *
+ * Split out so a caller that needs more than one group of settings — the request
+ * hook needs the locales and the coming-soon flag — reads the table once instead
+ * of once per group.
+ */
+export function readLanguageSettings(settingsMap: Map<string, string>): LanguageSettings {
   const defaultLocale = settingsMap.get('i18n_default_locale') || 'en';
 
   let enabledLocales: string[] = [defaultLocale];
@@ -321,6 +331,44 @@ export async function getLanguageSettings(
   }
 
   return { defaultLocale, enabledLocales };
+}
+
+/**
+ * Whether the site is still behind its coming-soon gate.
+ *
+ * Read on every public request (see `hooks.server.ts`), so it rides on the same
+ * `getSiteSettings` call the locale resolution already makes — a separate query
+ * per request for one boolean would be a tax on every page view of every tenant
+ * forever.
+ *
+ * Defaults to OFF for an existing site. Turning this on for sites that were live
+ * before the feature existed would take working shops offline on deploy, and no
+ * feature is worth that.
+ */
+export interface ComingSoonSettings {
+  enabled: boolean;
+}
+
+export const COMING_SOON_SETTING_KEY = 'coming_soon_enabled';
+
+export function readComingSoon(settings: Map<string, string>): ComingSoonSettings {
+  return { enabled: settings.get(COMING_SOON_SETTING_KEY) === 'true' };
+}
+
+export async function getComingSoonSettings(
+  db: D1Database,
+  siteId: string
+): Promise<ComingSoonSettings> {
+  const settings = await getSiteSettings(db, siteId);
+  return readComingSoon(new Map(settings.map((s) => [s.setting_key, s.setting_value])));
+}
+
+export async function updateComingSoonSettings(
+  db: D1Database,
+  siteId: string,
+  settings: ComingSoonSettings
+): Promise<void> {
+  await upsertSiteSetting(db, siteId, COMING_SOON_SETTING_KEY, settings.enabled ? 'true' : 'false');
 }
 
 export async function updateLanguageSettings(

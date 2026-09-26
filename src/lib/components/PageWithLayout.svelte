@@ -13,6 +13,7 @@
   import type { PageComponent, LayoutWidget } from '$lib/types/pages';
   import type { SiteContext } from '$lib/utils/templateSubstitution';
   import FrontendComponentRenderer from '$lib/components/FrontendComponentRenderer.svelte';
+  import MotionBox from '$lib/components/MotionBox.svelte';
   import { buildComponentTree } from '$lib/utils/componentTree';
 
   // User type for visibility filtering
@@ -75,7 +76,13 @@
             {#if sortedPageComponents.length > 0}
               <div class="page-components">
                 {#each sortedPageComponents as component (component.id)}
-                  <div class="component-container" data-component-type={component.type}>
+                  <MotionBox
+                    class="component-container"
+                    componentType={component.type}
+                    motion={component.config?.motion}
+                    ambient={component.config?.ambient}
+                    scrollEffect={component.config?.scrollEffect}
+                  >
                     <FrontendComponentRenderer
                       type={component.type}
                       config={component.config}
@@ -83,7 +90,7 @@
                       {siteContext}
                       {user}
                     />
-                  </div>
+                  </MotionBox>
                 {/each}
               </div>
             {:else}
@@ -111,7 +118,13 @@
       {#if sortedPageComponents.length > 0}
         <div class="page-components">
           {#each sortedPageComponents as component (component.id)}
-            <div class="component-container" data-component-type={component.type}>
+            <MotionBox
+              class="component-container"
+              componentType={component.type}
+              motion={component.config?.motion}
+              ambient={component.config?.ambient}
+              scrollEffect={component.config?.scrollEffect}
+            >
               <FrontendComponentRenderer
                 type={component.type}
                 config={component.config}
@@ -119,7 +132,7 @@
                 {siteContext}
                 {user}
               />
-            </div>
+            </MotionBox>
           {/each}
         </div>
       {:else}
@@ -165,7 +178,9 @@
     gap: 1.5rem;
   }
 
-  .component-container {
+  /* `:global` because .component-container is now emitted by MotionBox, and a
+     scoped rule is only kept for elements Svelte can see in this file's markup. */
+  :global(.component-container) {
     width: 100%;
   }
 

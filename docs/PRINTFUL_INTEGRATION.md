@@ -2,7 +2,7 @@
 
 ## Overview
 
-Hermes integrates with Printful, a print-on-demand fulfillment service, allowing you to:
+Ammoura integrates with Printful, a print-on-demand fulfillment service, allowing you to:
 
 - **Sync Products** - Import Printful's catalog directly into your store
 - **Manage Inventory** - Let Printful handle stock management
@@ -28,7 +28,7 @@ Hermes integrates with Printful, a print-on-demand fulfillment service, allowing
 3. **Database Layer** (`src/lib/server/integrations/printful/db.ts`)
    - Stores Printful product and order data
    - Tracks sync state
-   - Links Hermes products to Printful products
+   - Links Ammoura products to Printful products
 
 4. **API Endpoints**
    - `POST /api/admin/printful/sync` - Sync products from Printful
@@ -44,7 +44,7 @@ Hermes integrates with Printful, a print-on-demand fulfillment service, allowing
 3. Generate a new API key
 4. Copy the API key (you'll need it in the next step)
 
-### 2. Create Printful Provider in Hermes
+### 2. Create Printful Provider in Ammoura
 
 1. Go to Admin Dashboard → **Fulfillment Providers**
 2. Click **Add Provider**
@@ -280,7 +280,7 @@ A: The product becomes unavailable for purchase. Webhook updates reflect this ch
 
 ### Q: How do I handle returns/refunds?
 
-A: Refunds are managed in Printful dashboard. Hermes will receive webhook updates.
+A: Refunds are managed in Printful dashboard. Ammoura will receive webhook updates.
 
 ### Q: Can I test without placing real orders?
 

@@ -1,11 +1,11 @@
 # Cloudflare D1 Database Integration
 
 This document provides comprehensive information about the Cloudflare D1
-database integration with multi-site support for the Hermes eCommerce platform.
+database integration with multi-site support for the Ammoura platform.
 
 ## Overview
 
-Hermes uses Cloudflare D1, a serverless SQL database, as its primary data
+Ammoura uses Cloudflare D1, a serverless SQL database, as its primary data
 storage solution. The database schema is designed with multi-tenancy in mind,
 allowing a single deployment to serve multiple stores/sites.
 

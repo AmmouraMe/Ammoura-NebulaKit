@@ -136,7 +136,7 @@
 </script>
 
 <svelte:head>
-  <title>Create User - Hermes Admin</title>
+  <title>Create User - Ammoura Admin</title>
 </svelte:head>
 
 <div class="create-user-page">

@@ -19,13 +19,17 @@
 </script>
 
 <svelte:head>
-  <title>Tax Settings - Hermes Admin</title>
+  <title>Tax Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">
   <div class="page-header">
     <h1>Tax Settings</h1>
     <p>Configure tax calculations and display options</p>
+    <p class="page-note">
+      Checkout charges what is set here. With calculations off, this store adds no tax to an order.
+      Per-product tax classes are not applied yet — every taxed line uses the default rate below.
+    </p>
   </div>
 
   <div class="settings-card">
@@ -107,6 +111,12 @@
     color: var(--color-text-secondary);
     margin: 0;
     transition: color var(--transition-normal);
+  }
+
+  .page-note {
+    margin-top: 0.5rem !important;
+    font-size: 0.875rem;
+    max-width: 60ch;
   }
 
   .settings-card {

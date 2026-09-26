@@ -4,7 +4,7 @@
 
 ## Overview
 
-Comprehensive mobile responsiveness improvements implemented across the Hermes
+Comprehensive mobile responsiveness improvements implemented across the Ammoura
 eCommerce platform to ensure all components and pages work seamlessly on mobile
 devices.
 

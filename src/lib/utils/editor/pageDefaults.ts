@@ -27,6 +27,16 @@ export interface BuiltinPageDefinition {
   title: string;
   slug: string;
   description?: string;
+  /**
+   * A built-in layout slug this page must use instead of the site's default.
+   *
+   * Only set it where the default layout would be WRONG, not merely different —
+   * the holding page is the case it exists for, because the navbar and footer it
+   * would otherwise inherit are full of links that answer 503 while the gate is
+   * up. Everything else follows the site's default so a tenant's own layout
+   * edits reach it.
+   */
+  layoutSlug?: string;
   getWidgets: () => WidgetDefinition[];
 }
 
@@ -667,7 +677,7 @@ function getPricingHeader(): unknown {
           type: 'heading',
           position: 1,
           config: {
-            heading: 'Hermes eCommerce Pricing',
+            heading: 'Ammoura Pricing',
             level: 2,
             textColor: 'theme:text',
             alignment: 'center',
@@ -1524,6 +1534,129 @@ export function getTermsOfServicePageWidgets(): WidgetDefinition[] {
 }
 
 /**
+ * The coming-soon holding page.
+ *
+ * This is the one built-in page whose job is to exist BEFORE the site does, and
+ * it is deliberately built out of ordinary builder components — a scene, a
+ * container, a heading, text, a button — rather than being a hand-written HTML
+ * document. Two reasons, and the second is the real one:
+ *
+ * 1. The owner can edit it. It is their holding page, on their domain, and the
+ *    words on it are the first thing anyone learns about them. A placeholder
+ *    they cannot change is a placeholder that says the wrong thing.
+ * 2. It is the proof that the builder can do this at all. If the platform's own
+ *    holding page had to be hand-coded, that would be the plainest possible
+ *    statement that the builder is not finished — which is exactly the
+ *    dogfooding rule in plans/frontend-overhaul.md §2.
+ *
+ * The starfield and the staggered entrance are the new `scene` and `motion`
+ * features being used in anger rather than demonstrated in isolation. Both
+ * disappear entirely for a visitor who has asked for reduced motion, and what is
+ * left is still a complete page: a name, a sentence, and a way to get in touch.
+ */
+export function getComingSoonPageWidgets(): WidgetDefinition[] {
+  return [
+    {
+      id: 'coming-soon-scene',
+      type: 'scene',
+      position: 0,
+      config: {
+        sceneVariant: 'stars',
+        sceneDensity: 55,
+        sceneSpeed: 40,
+        scenePointerParallax: true,
+        // Tall enough to be the page rather than a band across it. dvh, not vh,
+        // so a phone browser's collapsing toolbar does not leave a gap.
+        sceneHeight: '100dvh',
+        backgroundColor: 'theme:background',
+        containerDisplay: { desktop: 'flex', tablet: 'flex', mobile: 'flex' },
+        children: [
+          {
+            id: 'coming-soon-content',
+            type: 'container',
+            position: 0,
+            config: {
+              containerPadding: {
+                desktop: { top: 96, right: 24, bottom: 96, left: 24 },
+                tablet: { top: 72, right: 20, bottom: 72, left: 20 },
+                mobile: { top: 56, right: 16, bottom: 56, left: 16 }
+              },
+              containerMargin: {
+                desktop: { top: 0, right: 'auto', bottom: 0, left: 'auto' },
+                tablet: { top: 0, right: 'auto', bottom: 0, left: 'auto' },
+                mobile: { top: 0, right: 0, bottom: 0, left: 0 }
+              },
+              containerBackground: 'transparent',
+              containerMaxWidth: '640px',
+              containerDisplay: { desktop: 'flex', tablet: 'flex', mobile: 'flex' },
+              containerFlexDirection: { desktop: 'column', tablet: 'column', mobile: 'column' },
+              containerAlignItems: 'center',
+              containerJustifyContent: 'center',
+              // 100% of the scene, not 100dvh. Both asking for a viewport meant
+              // the container was taller than the box it centred itself in, so
+              // its content overflowed in BOTH directions and the heading was
+              // clipped off the top, unreachable.
+              containerMinHeight: { desktop: '100%', tablet: '100%', mobile: '100%' },
+              containerGap: { desktop: 20, tablet: 18, mobile: 16 },
+              // The container staggers its children rather than each child
+              // carrying its own delay: one number here, and the name, the line
+              // and the button arrive in the order they are read.
+              motion: { preset: 'fade-up', duration: 700, stagger: 110 },
+              children: [
+                {
+                  id: 'coming-soon-name',
+                  type: 'heading',
+                  position: 0,
+                  config: {
+                    heading: '${site.name}',
+                    level: 1,
+                    alignment: 'center',
+                    textColor: 'theme:text',
+                    fontSize: { desktop: 52, tablet: 42, mobile: 34 },
+                    typography: { fontWeight: 'bold', lineHeight: 1.15 },
+                    motion: { preset: 'fade-up', duration: 700 }
+                  }
+                },
+                {
+                  id: 'coming-soon-line',
+                  type: 'text',
+                  position: 1,
+                  config: {
+                    text: 'Something is being built here. Come back soon.',
+                    alignment: 'center',
+                    textColor: 'theme:textSecondary',
+                    fontSize: { desktop: 19, tablet: 18, mobile: 16 },
+                    typography: { lineHeight: 1.65 },
+                    motion: { preset: 'fade-up', duration: 700 }
+                  }
+                },
+                {
+                  id: 'coming-soon-contact',
+                  type: 'button',
+                  position: 2,
+                  config: {
+                    label: 'Get in touch',
+                    // mailto rather than a form: a holding page that collects
+                    // addresses needs somewhere to put them, and at this stage
+                    // there may be no store, no list and no privacy notice worth
+                    // the name. An email works on day one.
+                    url: 'mailto:${site.email}',
+                    variant: 'outline',
+                    size: 'medium',
+                    buttonAlign: 'center',
+                    motion: { preset: 'fade', duration: 700 }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ];
+}
+
+/**
  * All built-in page definitions
  */
 export const BUILTIN_PAGES: BuiltinPageDefinition[] = [
@@ -1533,6 +1666,15 @@ export const BUILTIN_PAGES: BuiltinPageDefinition[] = [
     slug: '/',
     description: 'Default home page with hero, features, pricing, and products sections',
     getWidgets: getHomePageWidgets
+  },
+  {
+    id: 'builtin-coming-soon-page',
+    title: 'Coming Soon',
+    slug: '/coming-soon',
+    layoutSlug: 'minimal',
+    description:
+      'The holding page served while the coming-soon gate is on. Built from ordinary builder components so the owner can rewrite it.',
+    getWidgets: getComingSoonPageWidgets
   },
   {
     id: 'builtin-privacy-policy-page',
@@ -1558,6 +1700,21 @@ export const BUILTIN_PAGES: BuiltinPageDefinition[] = [
  * placeholder text quietly stand in as their real policy.
  */
 export const LEGAL_BUILTIN_PAGE_SLUGS = ['/privacy-policy', '/terms-of-service'];
+
+/**
+ * Built-in pages seeded the moment a site is created, rather than waiting for
+ * an admin to run the builtin seeder.
+ *
+ * The legal pages are here because the default footer links to them, so without
+ * them a brand-new store ships two dead links (issue #72). The holding page is
+ * here for the same shape of reason: the coming-soon toggle has to be something
+ * an owner can switch on, not something that first requires them to know a page
+ * needs seeding.
+ *
+ * The home page is deliberately absent — createSiteForAccount seeds its own
+ * starter home immediately above.
+ */
+export const CREATION_SEEDED_PAGE_SLUGS = [...LEGAL_BUILTIN_PAGE_SLUGS, '/coming-soon'];
 
 /**
  * Get the default widgets for a built-in page by ID

@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-  <title>Edit Product - Hermes Admin</title>
+  <title>Edit Product - Ammoura Admin</title>
 </svelte:head>
 
 <div class="edit-product-page">

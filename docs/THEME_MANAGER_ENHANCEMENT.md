@@ -2,7 +2,7 @@
 
 ## Overview
 
-Complete redesign of the Color Theme Management section in the Hermes admin
+Complete redesign of the Color Theme Management section in the Ammoura admin
 dashboard, implementing drag-and-drop theme organization, active theme selection
 with live site application, minimal row-based UI design, and color harmony tools
 in the theme editor.

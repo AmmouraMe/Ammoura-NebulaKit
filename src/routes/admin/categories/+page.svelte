@@ -122,7 +122,7 @@
 </script>
 
 <svelte:head>
-  <title>Category Shipping - Hermes Admin</title>
+  <title>Category Shipping - Ammoura Admin</title>
 </svelte:head>
 
 <div class="category-shipping-page">

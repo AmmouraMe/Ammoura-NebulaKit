@@ -116,6 +116,20 @@ describe('Checkout Validation', () => {
       expect(errors.country).toBeDefined();
     });
 
+    it('should error on a country that is not a country', () => {
+      for (const country of ['Other', 'Freedonia', 'ZZ']) {
+        const errors = validateShippingAddress({ ...validAddress, country });
+        expect(errors.country).toBeDefined();
+      }
+    });
+
+    it('should accept an ISO-2 code and a country name alike', () => {
+      for (const country of ['US', 'JP', 'Japan', 'Brazil']) {
+        const errors = validateShippingAddress({ ...validAddress, country });
+        expect(errors.country).toBeUndefined();
+      }
+    });
+
     it('should error on empty country', () => {
       const errors = validateShippingAddress({ ...validAddress, country: '' });
       expect(errors.country).toBeDefined();
@@ -175,6 +189,11 @@ describe('Checkout Validation', () => {
 
     it('should error on short country', () => {
       const errors = validateBillingAddress({ ...validAddress, country: 'U' });
+      expect(errors.country).toBeDefined();
+    });
+
+    it('should error on a country that is not a country', () => {
+      const errors = validateBillingAddress({ ...validAddress, country: 'Other' });
       expect(errors.country).toBeDefined();
     });
   });

@@ -12,7 +12,14 @@
 
 import { getProductById } from './db/products.js';
 import { getProductVariantById } from './db/product-variants.js';
-import { calculateOrderTax, roundMoney } from '../checkout-pricing.js';
+import { getTaxSettings } from './db/site-settings.js';
+import {
+  calculateOrderTax,
+  calculateOrderTotal,
+  NO_TAX,
+  roundMoney,
+  type TaxRule
+} from '../checkout-pricing.js';
 
 export interface RepriceableItem {
   product_id?: string;
@@ -33,6 +40,30 @@ export interface RepricedCheckout<T> {
   subtotal: number;
   tax: number;
   total: number;
+  /** The rule the tax was charged under, for the caller to record or show. */
+  taxRule: TaxRule;
+}
+
+/**
+ * The site's tax rule, read from its own settings.
+ *
+ * Never from the request: a rate the browser sends is a rate a browser can
+ * change. A settings read that fails falls back to no tax rather than to a
+ * guessed rate — charging nothing is recoverable, overcharging a customer is
+ * not.
+ */
+export async function getCheckoutTaxRule(db: D1Database, siteId: string): Promise<TaxRule> {
+  try {
+    const settings = await getTaxSettings(db, siteId);
+    return {
+      enabled: settings.calculationsEnabled,
+      ratePercent: settings.defaultRate,
+      pricesIncludeTax: settings.pricesIncludeTax
+    };
+  } catch (error) {
+    console.error('Failed to read tax settings; charging no tax', error);
+    return NO_TAX;
+  }
 }
 
 export class CheckoutPricingError extends Error {}
@@ -55,6 +86,9 @@ function assertValidQuantity(quantity: unknown, label: string): number {
 /**
  * Replace each item's client-supplied price with the one stored for that
  * product/variant, and recompute subtotal, tax and total from the result.
+ *
+ * Tax comes from the site's own settings, read here rather than accepted from
+ * the request — see `getCheckoutTaxRule`.
  *
  * Shipping is passed through: it is chosen from server-offered options but the
  * selection logic (per-product groups, free-shipping thresholds) still lives in
@@ -112,13 +146,15 @@ export async function repriceCheckout<T extends RepriceableItem>(
   }
 
   const subtotal = roundMoney(repriced.reduce((sum, entry) => sum + entry.lineTotal, 0));
-  const tax = calculateOrderTax(subtotal);
+  const taxRule = await getCheckoutTaxRule(db, siteId);
+  const tax = calculateOrderTax(subtotal, taxRule);
   const shipping = roundMoney(shippingCost);
 
   return {
     items: repriced,
     subtotal,
     tax,
-    total: roundMoney(subtotal + shipping + tax)
+    total: calculateOrderTotal(subtotal, shipping, tax, taxRule),
+    taxRule
   };
 }

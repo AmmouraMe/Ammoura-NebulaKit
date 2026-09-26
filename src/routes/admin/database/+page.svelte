@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Database Navigator - Hermes Admin</title>
+  <title>Database Navigator - Ammoura Admin</title>
 </svelte:head>
 
 <div class="database-page">

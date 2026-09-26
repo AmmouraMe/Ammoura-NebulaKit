@@ -313,6 +313,13 @@
         dividerWidth: '100%',
         dividerSpacing: { desktop: 32, tablet: 24, mobile: 16 }
       },
+      scene: {
+        sceneVariant: 'stars',
+        sceneDensity: 50,
+        sceneSpeed: 50,
+        scenePointerParallax: true,
+        sceneHeight: '420px'
+      },
       single_product: {
         productId: '',
         layout: 'card',
@@ -628,6 +635,7 @@
           columns: '▦',
           spacer: '↕',
           divider: '—',
+          scene: '✦',
           heading: '🔤',
           text: '📝',
           button: '🔘',

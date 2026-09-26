@@ -2,7 +2,12 @@ import { json, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { getDB, getAccountBySessionToken, getUserBySessionToken } from '$lib/server/db';
 import { ACCOUNT_SESSION_COOKIE } from '$lib/server/db/account-sessions';
 import { USER_SESSION_COOKIE } from '$lib/server/db/user-sessions';
-import { getLanguageSettings } from '$lib/server/db/site-settings';
+import {
+  getSiteSettings,
+  readComingSoon,
+  readLanguageSettings
+} from '$lib/server/db/site-settings';
+import { COMING_SOON_SLUG, decideGate, GATED_HEADERS, GATED_STATUS } from '$lib/server/coming-soon';
 import { resolveSiteIdForHostname } from '$lib/server/site-routing';
 import { getPlatformSitesDomain } from '$lib/server/sites-service';
 import { resolveLocale, isSupportedLocale, LOCALE_COOKIE, DEFAULT_LOCALE } from '$lib/i18n';
@@ -189,11 +194,19 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Note: in dev the /subdomain simulation shares one locale cookie across
   // simulated tenants (single origin) — harmless.
   let languageSettings = { defaultLocale: DEFAULT_LOCALE, enabledLocales: [DEFAULT_LOCALE] };
+  // The coming-soon gate is read from the SAME settings row set as the locales.
+  // One read, two answers: a second query per request for one boolean would be a
+  // tax on every page view of every tenant, forever.
+  let comingSoon = { enabled: false };
   if (event.platform?.env?.DB) {
     try {
-      languageSettings = await getLanguageSettings(getDB(event.platform), siteId);
+      const rows = await getSiteSettings(getDB(event.platform), siteId);
+      const settingsMap = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
+      languageSettings = readLanguageSettings(settingsMap);
+      comingSoon = readComingSoon(settingsMap);
     } catch {
-      // defaults above
+      // Defaults above, and the gate stays DOWN. A settings read that fails must
+      // not take a live storefront offline.
     }
   }
   const enabledLocales = languageSettings.enabledLocales.filter(isSupportedLocale);
@@ -284,23 +297,76 @@ export const handle: Handle = async ({ event, resolve }) => {
     userRole: event.locals.currentUser?.role ?? (event.locals.account ? 'account' : 'anonymous')
   });
 
+  // Every response this hook hands back carries the request id and gets logged,
+  // including one the coming-soon gate returns itself. Logging only the
+  // `resolve` path would go quiet exactly when a site is new and gated, which
+  // is when someone is most likely to be asking whether it is up.
+  const finish = (response: Response): Response => {
+    response.headers.set('x-request-id', event.locals.requestId);
+
+    // Static assets would bury everything else, and they are already in
+    // Cloudflare's own request logs.
+    if (!event.url.pathname.startsWith('/_app/')) {
+      event.locals.log.info('request', {
+        status: response.status,
+        durationMs: Date.now() - startedAt
+      });
+    }
+
+    return response;
+  };
+
+  // The coming-soon gate. Last, because it has to know whether this is the owner
+  // — the person building the site always sees the site, never the holding page.
+  //
+  // The holding page is served IN PLACE rather than redirected to, so the URL a
+  // visitor was given survives: when the gate comes down, their reload lands on
+  // the page they were looking for. Route resolution happens before `handle`, so
+  // the URL cannot simply be rewritten here; instead the holding page is fetched
+  // as an internal sub-request, which routes and renders it through the ordinary
+  // page pipeline. That is what keeps it a real builder page — editable, themed,
+  // and able to use every component — rather than a hand-coded HTML string.
+  //
+  // The sub-request cannot recurse: COMING_SOON_SLUG is on the exemption list.
+  const gate = decideGate({
+    enabled: comingSoon.enabled,
+    pathname: event.url.pathname,
+    isAdmin: Boolean(event.locals.isAdmin),
+    method: event.request?.method,
+    isDataRequest: event.url.pathname.endsWith('__data.json')
+  });
+
+  if (gate.gated) {
+    try {
+      const holding = await event.fetch(COMING_SOON_SLUG);
+      if (holding.ok) {
+        const headers = new Headers(GATED_HEADERS);
+        const contentType = holding.headers.get('content-type');
+        if (contentType) headers.set('content-type', contentType);
+        return finish(new Response(await holding.text(), { status: GATED_STATUS, headers }));
+      }
+    } catch (error) {
+      if (!dev) {
+        console.error('Coming-soon holding page failed to render:', error);
+      }
+    }
+    // The holding page is missing or broken. Serving the real site is the wrong
+    // answer here — the owner asked for it to be hidden — so say plainly that
+    // there is nothing to see yet rather than leaking a half-built shop.
+    return finish(
+      new Response('This site is not published yet.', {
+        status: GATED_STATUS,
+        headers: { ...GATED_HEADERS, 'content-type': 'text/plain; charset=utf-8' }
+      })
+    );
+  }
+
   const response = await resolve(event, {
     // app.html carries lang="%lang%"; emit the resolved locale
     transformPageChunk: ({ html }) => html.replace('%lang%', event.locals.locale)
   });
 
-  response.headers.set('x-request-id', event.locals.requestId);
-
-  // Static assets would bury everything else, and they are already in
-  // Cloudflare's own request logs.
-  if (!event.url.pathname.startsWith('/_app/')) {
-    event.locals.log.info('request', {
-      status: response.status,
-      durationMs: Date.now() - startedAt
-    });
-  }
-
-  return response;
+  return finish(response);
 };
 
 /**

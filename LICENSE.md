@@ -1,4 +1,4 @@
-# Hermes GNU Affero General Public License v3.0
+# Ammoura GNU Affero General Public License v3.0
 
 Copyright © 2025 StarSpace Group
 

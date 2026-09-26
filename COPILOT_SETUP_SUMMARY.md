@@ -3,7 +3,7 @@
 ## Overview
 
 This document summarizes the comprehensive GitHub Copilot configuration
-completed for the Hermes eCommerce Platform project on November 15, 2025.
+completed for the Ammoura project on November 15, 2025.
 
 ## What Was Accomplished
 

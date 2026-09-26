@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import ProductCard from '../lib/components/ProductCard.svelte';
   import FrontendComponentRenderer from '$lib/components/FrontendComponentRenderer.svelte';
   import { buildComponentTree } from '$lib/utils/componentTree';
@@ -98,7 +99,7 @@
   <title
     >{page
       ? page.title
-      : `${data.storeName || 'Hermes eCommerce'} - ${$t('home.titleSuffix')}`}</title
+      : `${data.storeName || DEFAULT_STORE_NAME} - ${$t('home.titleSuffix')}`}</title
   >
   <meta name="description" content={$t('home.metaDescription')} />
 </svelte:head>
@@ -212,7 +213,7 @@
 
   <section class="pricing" id="pricing">
     <div class="section-header">
-      <h2>🚀 {$t('home.pricingTitle', { storeName: data.storeName || 'Hermes eCommerce' })}</h2>
+      <h2>🚀 {$t('home.pricingTitle', { storeName: data.storeName || DEFAULT_STORE_NAME })}</h2>
       <p class="pricing-tagline">{$t('home.pricingTagline')}</p>
       <p class="pricing-subtitle">{$t('home.pricingSubtitle')}</p>
     </div>
@@ -331,7 +332,7 @@
           </svg>
         </a>
         <a
-          href="https://github.com/starspacegroup/hermes"
+          href="https://github.com/AmmouraMe/Ammoura-NebulaKit"
           target="_blank"
           class="btn btn-secondary btn-lg"
         >

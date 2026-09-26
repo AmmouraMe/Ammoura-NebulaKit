@@ -123,7 +123,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.user.name} - User Details - Hermes Admin</title>
+  <title>{data.user.name} - User Details - Ammoura Admin</title>
 </svelte:head>
 
 <div class="user-detail-page">

@@ -11,7 +11,7 @@ import { upsertSiteSetting } from './db/site-settings.js';
 import { createPage } from './db/pages.js';
 import { createRevision } from './db/revisions.js';
 import { seedBuiltinPage, CURRENT_BUILTIN_VERSION } from './db/builtin-seeding.js';
-import { BUILTIN_PAGES, LEGAL_BUILTIN_PAGE_SLUGS } from '$lib/utils/editor/pageDefaults';
+import { BUILTIN_PAGES, CREATION_SEEDED_PAGE_SLUGS } from '$lib/utils/editor/pageDefaults';
 import { validateSlug } from './slugs.js';
 import { purgeRouteCache } from './site-routing.js';
 import type { PageComponent } from '$lib/types/pages';
@@ -136,16 +136,20 @@ export async function createSiteForAccount(
     console.error('Could not seed starter home page:', error);
   }
 
-  // Seed the built-in legal pages. The default footer links to
-  // /privacy-policy and /terms-of-service, so without these a brand-new store
-  // ships two dead links (issue #72). seedBuiltinPage is reused rather than
-  // createPage so the ids, is_builtin flag and published revision match what
-  // the production seeder expects and it stays idempotent.
-  for (const definition of BUILTIN_PAGES.filter((p) => LEGAL_BUILTIN_PAGE_SLUGS.includes(p.slug))) {
+  // Seed the built-in pages a site needs from its first minute: the legal pages
+  // the default footer links to (issue #72), and the coming-soon holding page,
+  // so the visibility toggle works without the owner first having to know that a
+  // page needs seeding. seedBuiltinPage is reused rather than createPage so the
+  // ids, is_builtin flag and published revision match what the production seeder
+  // expects and it stays idempotent.
+  for (const definition of BUILTIN_PAGES.filter((p) =>
+    CREATION_SEEDED_PAGE_SLUGS.includes(p.slug)
+  )) {
     try {
       await seedBuiltinPage(db, site.id, definition, CURRENT_BUILTIN_VERSION);
     } catch (error) {
-      // A missing legal page is a broken link, not a failed signup.
+      // A missing built-in page is a broken link or a toggle that needs a
+      // second try, not a failed signup.
       console.error(`Could not seed built-in page ${definition.slug}:`, error);
     }
   }

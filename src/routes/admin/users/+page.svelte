@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-  <title>Users - Hermes Admin</title>
+  <title>Users - Ammoura Admin</title>
 </svelte:head>
 
 <div class="users-page">

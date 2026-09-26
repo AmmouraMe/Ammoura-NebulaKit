@@ -65,6 +65,13 @@
       icon: 'M3 12h18'
     },
     {
+      type: 'scene',
+      label: 'Scene',
+      description: 'Ambient backdrop: starfield, aurora or grid',
+      category: 'Layout',
+      icon: 'M12 3v2m0 14v2m9-9h-2M5 12H3m14.5-6.5l-1.4 1.4M7.9 16.1l-1.4 1.4m0-11.4l1.4 1.4m8.2 8.2l1.4 1.4'
+    },
+    {
       type: 'heading',
       label: 'Heading',
       description: 'Section heading text',

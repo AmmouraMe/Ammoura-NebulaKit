@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Add Product - Hermes Admin</title>
+  <title>Add Product - Ammoura Admin</title>
 </svelte:head>
 
 <div class="add-product-page">

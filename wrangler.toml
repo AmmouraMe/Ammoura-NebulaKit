@@ -1,3 +1,10 @@
+# `hermes` is the project's codename from before the 2026-09-22 rename to
+# Ammoura. Every `hermes-*` name in this file is a LIVE Cloudflare resource —
+# the Worker itself, its routes and custom domains, the D1 databases and the R2
+# buckets. Editing one here does not rename anything in Cloudflare: it points
+# the binding at a resource that does not exist, and for `name` it deploys a
+# second, empty Worker and leaves the real one serving traffic. Renaming these
+# is a Cloudflare-side migration, not a find-and-replace.
 name = "hermes"
 compatibility_date = "2024-09-23"
 
@@ -52,6 +59,10 @@ PLATFORM_SITES_DOMAIN = "ammoura.me"
 #     the Worker's own scheduled() handler, which authenticates in-process.
 #     Optional, and only worth setting if operators need to force a job.
 #     See docs/SCHEDULED_JOBS.md.
+#   ERROR_WEBHOOK_URL — captured errors are alerted here. Without it they are
+#     still structured log lines; see docs/OBSERVABILITY.md.
+# Optional var: LOG_LEVEL (debug|info|warn|error). Unset means info in
+# production, so debug logging is off unless someone asks for it.
 # For local development put them in .dev.vars (see .dev.vars.example).
 
 # Tenancy (see Ammoura planning repo, plans/tenancy.md)

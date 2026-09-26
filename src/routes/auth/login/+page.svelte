@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import { t } from '$lib/i18n';
   import { authStore } from '$lib/stores/auth';
   import { goto, invalidateAll } from '$app/navigation';
@@ -94,8 +95,8 @@
 </script>
 
 <svelte:head>
-  <title>{$t('auth.login')} - {data.storeName || 'Hermes eCommerce'}</title>
-  <meta name="description" content="Login to {data.storeName || 'Hermes eCommerce'} Platform" />
+  <title>{$t('auth.login')} - {data.storeName || DEFAULT_STORE_NAME}</title>
+  <meta name="description" content="Login to {data.storeName || DEFAULT_STORE_NAME} Platform" />
 </svelte:head>
 
 <div class="login-container">

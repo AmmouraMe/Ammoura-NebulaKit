@@ -95,7 +95,7 @@
 </script>
 
 <svelte:head>
-  <title>Admin Users - Hermes Admin</title>
+  <title>Admin Users - Ammoura Admin</title>
 </svelte:head>
 
 <div class="users-page">

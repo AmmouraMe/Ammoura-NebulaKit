@@ -914,13 +914,59 @@ export async function seedAllBuiltinLayouts(
 /**
  * Seed a built-in page for a specific site
  */
+/**
+ * Point a page at a specific built-in layout, creating that layout for the site
+ * if it is not there yet.
+ *
+ * Only pages that declare a `layoutSlug` go through here. It exists for the
+ * coming-soon holding page, which must not inherit the site's navbar and footer
+ * — while the gate is up every link in them answers 503.
+ *
+ * Failure is swallowed on purpose: a page on the wrong layout is a cosmetic
+ * problem, and it must not fail the seeding of the page itself.
+ */
+async function attachBuiltinLayout(
+  db: D1Database,
+  siteId: string,
+  pageId: string,
+  layoutSlug: string,
+  defaultVersion: number
+): Promise<void> {
+  try {
+    const definition = BUILTIN_LAYOUTS.find((layout) => layout.slug === layoutSlug);
+    if (!definition) return;
+
+    let layout = await db
+      .prepare('SELECT id FROM layouts WHERE site_id = ? AND slug = ?')
+      .bind(siteId, layoutSlug)
+      .first<{ id: number }>();
+
+    if (!layout) {
+      await seedBuiltinLayout(db, siteId, definition, defaultVersion);
+      layout = await db
+        .prepare('SELECT id FROM layouts WHERE site_id = ? AND slug = ?')
+        .bind(siteId, layoutSlug)
+        .first<{ id: number }>();
+    }
+
+    if (layout) {
+      await db
+        .prepare('UPDATE pages SET layout_id = ? WHERE id = ? AND site_id = ?')
+        .bind(layout.id, pageId, siteId)
+        .run();
+    }
+  } catch (error) {
+    console.error(`Could not attach layout "${layoutSlug}" to page ${pageId}:`, error);
+  }
+}
+
 export async function seedBuiltinPage(
   db: D1Database,
   siteId: string,
   definition: BuiltinPageDefinition,
   defaultVersion: number
 ): Promise<SeedResult> {
-  const { id: pageId, title, slug, description: _description, getWidgets } = definition;
+  const { id: pageId, title, slug, description: _description, layoutSlug, getWidgets } = definition;
 
   // pages.id is a global primary key, so the stable builtin id must be
   // site-scoped or seeding any second site collides with the first.
@@ -987,6 +1033,10 @@ export async function seedBuiltinPage(
           `${DEFAULT_REVISION_MESSAGE_PREFIX}${defaultVersion}`
         )
         .run();
+
+      if (layoutSlug) {
+        await attachBuiltinLayout(db, siteId, sitePageId, layoutSlug, defaultVersion);
+      }
 
       return {
         action: 'created',

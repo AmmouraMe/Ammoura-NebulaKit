@@ -197,7 +197,7 @@ describe('context-detector', () => {
       const result = detectAIContext('/admin/products/new');
 
       expect(result.context.type).toBe('product_creation');
-      expect(result.systemPrompt).toContain('Hermes AI');
+      expect(result.systemPrompt).toContain('Ammoura AI');
       expect(result.capabilities).toBeInstanceOf(Array);
       expect(result.capabilities.length).toBeGreaterThan(0);
       expect(result.suggestions).toBeInstanceOf(Array);

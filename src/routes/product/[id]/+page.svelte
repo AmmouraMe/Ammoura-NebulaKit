@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import Button from '../../../lib/components/Button.svelte';
   import ProductMediaGallery from '../../../lib/components/ProductMediaGallery.svelte';
   import ProductCustomizer from '../../../lib/components/ProductCustomizer.svelte';
@@ -151,7 +152,7 @@
 </script>
 
 <svelte:head>
-  <title>{product.name} - {data.storeName || 'Hermes eCommerce'}</title>
+  <title>{product.name} - {data.storeName || DEFAULT_STORE_NAME}</title>
   <meta name="description" content={product.description} />
 </svelte:head>
 

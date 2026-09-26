@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import PageWithLayout from '$lib/components/PageWithLayout.svelte';
   import DefaultContentEntry from '$lib/components/DefaultContentEntry.svelte';
   import DefaultContentListing from '$lib/components/DefaultContentListing.svelte';
@@ -41,7 +42,7 @@
 </script>
 
 <svelte:head>
-  <title>{page.title} - {data.storeName || 'Hermes eCommerce'}</title>
+  <title>{page.title} - {data.storeName || DEFAULT_STORE_NAME}</title>
 </svelte:head>
 
 {#if isPreview && page.status === 'draft'}

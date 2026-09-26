@@ -152,7 +152,7 @@
 </script>
 
 <svelte:head>
-  <title>Activity Logs - Hermes Admin</title>
+  <title>Activity Logs - Ammoura Admin</title>
 </svelte:head>
 
 <div class="activity-logs-page">

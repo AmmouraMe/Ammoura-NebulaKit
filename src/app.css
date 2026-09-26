@@ -1,10 +1,13 @@
-/* Global styles for Hermes eCommerce platform */
+/* Global styles for the Ammoura platform */
 
 /* Design tokens: spacing, type scale, radius, shadows, motion, focus */
 @import './lib/styles/tokens.css';
 
 /* Responsive layout: the global .responsive class consumed by responsiveStyle() */
 @import './lib/styles/responsive.css';
+
+/* Motion: the global .motion class consumed by motionStyle() */
+@import './lib/styles/motion.css';
 
 /* CSS Custom Properties - Theme System */
 /* NOTE: Theme colors (primary, secondary, backgrounds, text, borders) are now */

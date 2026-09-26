@@ -21,25 +21,11 @@ import { runRelayAttempt, type RunRelayResult } from '$lib/server/fulfillment/re
 import { getPrintfulOrder, storePrintfulOrder } from './db';
 import { isTransientPrintfulFailure, PrintfulApiError } from './errors';
 import { PrintfulService } from './service';
+import { toCountryCode } from '$lib/data/countries';
 import type { PrintfulOrder, PrintfulOrderRequest, PrintfulRecipient } from './types';
 
 export const PRINTFUL_PROVIDER_TYPE = 'printful';
 const PRINTFUL_PROVIDER_LABEL = 'Printful';
-
-/** Countries offered by ShippingAddressForm.svelte, mapped to ISO-3166-1 alpha-2. */
-const COUNTRY_TO_ISO2: Record<string, string> = {
-  'United States': 'US',
-  Canada: 'CA',
-  'United Kingdom': 'GB',
-  Australia: 'AU',
-  Germany: 'DE',
-  France: 'FR'
-};
-
-function toCountryCode(country: string): string | null {
-  if (/^[A-Z]{2}$/.test(country)) return country;
-  return COUNTRY_TO_ISO2[country] || null;
-}
 
 interface StoredShippingAddress {
   firstName: string;
@@ -51,6 +37,16 @@ interface StoredShippingAddress {
   state?: string;
   zipCode: string;
   country: string;
+}
+
+/** What the stored address calls its country, for an error a human must read. */
+function shippingCountry(order: DBOrder): string {
+  try {
+    const addr = JSON.parse(order.shipping_address) as StoredShippingAddress;
+    return addr.country?.trim() || '(blank)';
+  } catch {
+    return '(unreadable)';
+  }
 }
 
 function buildRecipient(order: DBOrder): PrintfulRecipient | null {
@@ -160,7 +156,7 @@ export async function relayPaidOrderToPrintful(
         const recipient = buildRecipient(order);
         if (!recipient) {
           throw RelayFailure.permanent(
-            `Shipping country is not one Printful can be given as an ISO code. Fix the address on order ${orderId}, then retry.`
+            `Shipping country "${shippingCountry(order)}" is not a country we can give Printful as an ISO code. Fix the address on order ${orderId}, then retry.`
           );
         }
 

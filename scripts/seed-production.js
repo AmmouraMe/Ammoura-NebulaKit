@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Production seeding script for Hermes built-ins
+ * Production seeding script for Ammoura built-ins
  *
  * This script safely seeds built-in components, layouts, and pages
  * into production databases using wrangler to execute against remote D1.
@@ -36,7 +36,7 @@ const databaseName = 'hermes-db';
 
 if (isHelp) {
   console.log(`
-Hermes Production Seeding Script
+Ammoura Production Seeding Script
 =================================
 
 Seeds built-in components, layouts, and pages into production databases
@@ -121,7 +121,7 @@ function generateSeedSQL(dryRun = true) {
   // 3. Optionally apply updates
 
   const sql = `
--- Hermes Production Seed Script
+-- Ammoura Production Seed Script
 -- Version: ${currentVersion}
 -- Mode: ${dryRun ? 'DRY RUN (preview only)' : 'APPLY CHANGES'}
 -- Generated: ${new Date().toISOString()}
@@ -169,7 +169,7 @@ GROUP BY s.id, s.name;
 
 async function main() {
   console.log('');
-  console.log('🌱 Hermes Production Seeding');
+  console.log('🌱 Ammoura Production Seeding');
   console.log('============================');
   console.log('');
 

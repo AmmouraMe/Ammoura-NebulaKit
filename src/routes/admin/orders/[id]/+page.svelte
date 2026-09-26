@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import type { DesignElement, Placement } from '$lib/utils/designElements';
   import { fontNameFor, inkNameFor } from '$lib/utils/designText';
+  import { countryName } from '$lib/data/countries';
 
   interface OrderItemArtwork {
     zoneName: string;
@@ -439,7 +440,7 @@
             {order.shipping_address.city}, {order.shipping_address.state}
             {order.shipping_address.zipCode}
           </p>
-          <p>{order.shipping_address.country}</p>
+          <p>{countryName(order.shipping_address.country)}</p>
         </div>
         <div class="customer-section">
           <h3>Billing Address</h3>
@@ -452,7 +453,7 @@
             {order.billing_address.city}, {order.billing_address.state}
             {order.billing_address.zipCode}
           </p>
-          <p>{order.billing_address.country}</p>
+          <p>{countryName(order.billing_address.country)}</p>
         </div>
       </div>
     </div>

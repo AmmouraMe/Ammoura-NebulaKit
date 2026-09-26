@@ -243,7 +243,7 @@
 </script>
 
 <svelte:head>
-  <title>SSO Providers - Hermes Admin</title>
+  <title>SSO Providers - Ammoura Admin</title>
 </svelte:head>
 
 <div class="sso-settings-page">

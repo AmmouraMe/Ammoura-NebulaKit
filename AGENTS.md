@@ -1,8 +1,7 @@
 # Agent Guidelines
 
 Guidelines for AI agents (Claude Code, Amp, GitHub Copilot, etc.) working on
-this codebase — the **Ammoura™** multi-tenant eCommerce platform (codenamed
-**Hermes**).
+this codebase — the **Ammoura™** multi-tenant eCommerce platform.
 
 ## Development Workflow
 
@@ -127,15 +126,24 @@ One deployment serves many independent stores/sites. See
 
 ### D1 Schema & Migrations
 
-- Migrations live in `migrations/` as sequential `XXXX_description.sql` files
-  applied via `wrangler d1 migrations apply` (wrapped by
+- Migrations live in `migrations/` as sequential `NNNN_snake_case_name.sql`
+  files applied via `wrangler d1 migrations apply` (wrapped by
   `scripts/db-migrate.js`).
+- **A migration number is used once.** Two files sharing a number make apply
+  order fall out of filename sort rather than intent.
 - **Applied migrations are immutable**: never edit an existing migration file
   — `npm run deploy` applies migrations to the **production** database, so
   changing history breaks deployed environments. Always add a new
   sequential file (increment from the highest existing number) and test with
   `npm run db:migrate:local` (and `npm run db:test-migrations`) before
   deploying.
+- Both rules are checked, not just stated: `npm run check:migrations` (part of
+  `npm run gate`, so the pre-commit hook runs it) rejects a duplicate number or
+  a misnamed file, and with `--base <ref>` also rejects a migration that has
+  been edited or deleted since that ref. CI passes the PR's target branch.
+  Five numbers were already duplicated before the check existed; they are
+  frozen by filename in `scripts/check-migrations.js` and that list is history,
+  not a way to allow one more.
 - Prefer idempotent statements (`IF NOT EXISTS`) and include a rollback
   strategy in comments.
 
@@ -287,7 +295,7 @@ See `.github/copilot-instructions.md` for detailed usage examples.
 
 ## Related Projects
 
-Hermes lives inside a multi-repo workspace (each sibling is its own git
+Ammoura lives inside a multi-repo workspace (each sibling is its own git
 repository — never run git commands from the workspace root):
 
 - [../CLAUDE.md](../CLAUDE.md) - Workspace map of the parent multi-repo

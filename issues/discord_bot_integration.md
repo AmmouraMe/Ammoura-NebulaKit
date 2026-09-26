@@ -1,6 +1,6 @@
 ### User Story
 
-As a community manager, I want a Discord bot integrated with the Hermes platform, so that I can automate notifications, respond to user queries, and engage the community effectively.
+As a community manager, I want a Discord bot integrated with the Ammoura platform, so that I can automate notifications, respond to user queries, and engage the community effectively.
 
 ### Acceptance Criteria
 
@@ -10,4 +10,4 @@ As a community manager, I want a Discord bot integrated with the Hermes platform
 
 ### Additional Context
 
-The bot should be designed to work seamlessly with the existing Hermes platform stack and be easy to configure for different servers.
+The bot should be designed to work seamlessly with the existing Ammoura platform stack and be easy to configure for different servers.

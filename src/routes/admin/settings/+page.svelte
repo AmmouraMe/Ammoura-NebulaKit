@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import { toastStore } from '$lib/stores/toast';
   import ToggleSwitch from '$lib/components/ToggleSwitch.svelte';
+  import CountrySelect from '$lib/components/CountrySelect.svelte';
   import type { PageData, ActionData } from './$types';
 
   export let data: PageData;
@@ -23,7 +24,7 @@
 </script>
 
 <svelte:head>
-  <title>Settings - Hermes Admin</title>
+  <title>Settings - Ammoura Admin</title>
 </svelte:head>
 
 <div class="settings-page">
@@ -182,15 +183,7 @@
 
               <div class="form-group">
                 <label for="country">Country</label>
-                <select id="country" name="country" value={addressSettings.country}>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="AU">Australia</option>
-                  <option value="DE">Germany</option>
-                  <option value="FR">France</option>
-                  <option value="JP">Japan</option>
-                </select>
+                <CountrySelect id="country" name="country" value={addressSettings.country} />
               </div>
             </div>
 
@@ -305,7 +298,8 @@
   input[type='email'],
   input[type='tel'],
   textarea,
-  select {
+  select,
+  .form-group :global(select) {
     width: 100%;
     padding: 0.75rem;
     border: 2px solid var(--color-border-secondary);
@@ -327,7 +321,8 @@
 
   input:focus,
   textarea:focus,
-  select:focus {
+  select:focus,
+  .form-group :global(select:focus) {
     outline: none;
     border-color: var(--color-primary);
   }
@@ -472,7 +467,8 @@
 
     input,
     textarea,
-    select {
+    select,
+    .form-group :global(select) {
       padding: 0.625rem;
       font-size: 0.9375rem;
     }

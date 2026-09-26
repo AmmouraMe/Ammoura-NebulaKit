@@ -81,6 +81,28 @@
         }
       })();
     </script>
+    <script>
+      // Motion engine gate — see src/lib/styles/motion.css and src/lib/utils/motion.ts.
+      //
+      // Builder motion (reveals, ambient loops, parallax) is written so that it
+      // does NOTHING unless this attribute is present. That is what makes a
+      // reveal safe: the "from" state of a fade-up is `opacity: 0`, and an
+      // element left in it is an invisible page. So the attribute is set only
+      // when both conditions hold — scripting is running, and the visitor has
+      // not asked for less movement.
+      //
+      // It runs inline, before first paint, so an element that is going to be
+      // revealed is never painted settled and then snatched back.
+      (function () {
+        try {
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          document.documentElement.setAttribute('data-motion-engine', 'on');
+        } catch (e) {
+          // No matchMedia means no way to ask about reduced motion, and motion
+          // nobody consented to is worse than no motion. Leave it off.
+        }
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

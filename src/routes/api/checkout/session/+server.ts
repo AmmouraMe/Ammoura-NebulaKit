@@ -10,6 +10,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db/connection';
 import { createOrder, setOrderStripeSession } from '$lib/server/db/orders';
+import { toCountryCode } from '$lib/data/countries';
 import {
   saveEquipmentValuesForOrderItems,
   type OrderItemEquipmentValueSubmission
@@ -88,6 +89,23 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
     throw error(400, 'Missing required order information');
   }
 
+  // Countries are stored as ISO-2 and nothing else. The browser is not trusted
+  // to do it: an address whose country cannot be resolved here would be taken,
+  // charged, and then stuck at the fulfilment relay with nowhere to ship to.
+  const shippingCountry = toCountryCode(data.shipping_address.country ?? '');
+  if (!shippingCountry) {
+    throw error(400, 'Shipping country is not a country we can ship to');
+  }
+  const billingCountryRaw = data.billing_address.country;
+  const billingCountry = toCountryCode(
+    typeof billingCountryRaw === 'string' ? billingCountryRaw : ''
+  );
+  if (!billingCountry) {
+    throw error(400, 'Billing country is not a country we recognise');
+  }
+  data.shipping_address = { ...data.shipping_address, country: shippingCountry };
+  data.billing_address = { ...data.billing_address, country: billingCountry };
+
   const paymentSettings = await getPaymentSettings(db, siteId, encryptionKey);
   if (!paymentSettings.stripeEnabled || !paymentSettings.stripeSecretKey) {
     throw error(400, 'Stripe is not configured for this store');
@@ -140,7 +158,10 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
       quantity: 1
     });
   }
-  if (priced.tax > 0) {
+  // A tax-inclusive store's prices already contain the tax, so `priced.tax`
+  // reports it rather than adds it. A Tax line here would charge it twice and
+  // make Stripe collect more than the order row says.
+  if (priced.tax > 0 && !priced.taxRule.pricesIncludeTax) {
     lineItems.push({
       price_data: {
         currency: 'usd',
@@ -149,6 +170,22 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
       },
       quantity: 1
     });
+  }
+
+  // The order row and the Stripe charge are built from the same numbers by two
+  // different pieces of code. When they disagree, the customer is billed one
+  // amount and the merchant's records hold another, so refuse rather than
+  // charge — this endpoint has shipped that bug before.
+  const lineItemTotalCents = lineItems.reduce(
+    (sum, line) => sum + (line.price_data?.unit_amount ?? 0) * (line.quantity ?? 1),
+    0
+  );
+  if (lineItemTotalCents !== Math.round(priced.total * 100)) {
+    console.error(
+      `Checkout totals disagree for order ${order.id}: Stripe line items sum to ` +
+        `${lineItemTotalCents} cents, order total is ${Math.round(priced.total * 100)} cents`
+    );
+    throw error(500, 'Checkout could not price this order consistently');
   }
 
   const stripe = getStripeClient(paymentSettings.stripeSecretKey);

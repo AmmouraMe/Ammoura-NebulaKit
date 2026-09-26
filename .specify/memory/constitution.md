@@ -28,7 +28,7 @@ Follow-up TODOs: None
 ═══════════════════════════════════════════════════════════════════════
 -->
 
-# Hermes eCommerce Platform Constitution
+# Ammoura Constitution
 
 ## Core Principles
 
@@ -139,7 +139,7 @@ that must earn its place.
 
 ### Technology Stack
 
-**REQUIRED** technologies for the Hermes platform:
+**REQUIRED** technologies for the Ammoura platform:
 
 - **Framework**: SvelteKit 2.0+ with TypeScript 5.0+
 - **Deployment**: Cloudflare Pages with adapter-cloudflare

@@ -50,6 +50,7 @@
   import DropdownComponent from '$lib/components/builtin/Dropdown.svelte';
   import ThemeToggleComponent from '$lib/components/builtin/ThemeToggle.svelte';
   import MobileCollapseToggle from '$lib/components/builtin/MobileCollapseToggle.svelte';
+  import SceneComponent from '$lib/components/builtin/Scene.svelte';
   import {
     getMobileCollapseLabel,
     isContainerType,
@@ -67,6 +68,8 @@
     ComponentConfig
   } from '$lib/types/pages';
   import { responsiveStyle, type ResponsiveStyleProps } from '$lib/utils/responsiveStyle';
+  import MotionBox from '$lib/components/MotionBox.svelte';
+  import { resolveMotion } from '$lib/utils/motion';
 
   // Props
   export let type: string;
@@ -537,6 +540,13 @@
       type === 'pricing') &&
     children.length > 0;
 
+  /**
+   * A container may stagger its children's reveals. The delay is the child's
+   * own, plus its index times this — so the second card starts a beat after the
+   * first without anyone editing per-card delays by hand.
+   */
+  $: childStagger = resolveMotion(config.motion)?.stagger ?? 0;
+
   // Generate inline theme styles for CSS variables (same as admin builder)
   $: themeColors = getThemeColors(colorTheme);
   $: _themeStyles = generateThemeStyles(themeColors);
@@ -565,7 +575,7 @@
         <div class="hero-overlay" style="opacity: {(config.overlayOpacity ?? 50) / 100}" />
       {/if}
       {#each children as child, i (child.id || i)}
-        <div
+        <MotionBox
           class="child-wrapper"
           style={getChildLayoutStyles(
             child.config || {},
@@ -573,6 +583,10 @@
             containerFlexDirection,
             containerAlignItems
           )}
+          motion={child.config?.motion}
+          ambient={child.config?.ambient}
+          scrollEffect={child.config?.scrollEffect}
+          delayOffset={childStagger * i}
         >
           <svelte:self
             type={child.type}
@@ -582,7 +596,7 @@
             {user}
             insideNavbar={type === 'navbar'}
           />
-        </div>
+        </MotionBox>
       {/each}
     </div>
   {:else if isContainer}
@@ -617,7 +631,7 @@
           class:mobile-collapse-hidden={hasMobileCollapse && !mobileCollapseExpanded}
         >
           {#each children as child, i (child.id || i)}
-            <div
+            <MotionBox
               class="child-wrapper"
               style={getChildLayoutStyles(
                 child.config || {},
@@ -625,6 +639,10 @@
                 containerFlexDirection,
                 containerAlignItems
               )}
+              motion={child.config?.motion}
+              ambient={child.config?.ambient}
+              scrollEffect={child.config?.scrollEffect}
+              delayOffset={childStagger * i}
             >
               <svelte:self
                 type={child.type}
@@ -634,7 +652,7 @@
                 {user}
                 {insideNavbar}
               />
-            </div>
+            </MotionBox>
           {/each}
         </div>
       {/if}
@@ -862,6 +880,58 @@
     {:else}
       <ThemeToggleComponent {config} />
     {/if}
+  {:else if type === 'scene'}
+    <!-- A scene is a backdrop, so its children belong INSIDE it, over the canvas.
+         It is not in `usesContainerChildren` above because that branch replaces
+         the component with a plain div and the canvas would be lost; and it is
+         not a CONTAINER_CHILD_TYPE for the same reason. Hence its own branch.
+
+         Found by looking at the rendered page: without this the canvas drew and
+         every child silently vanished, present in the serialized page data and
+         nowhere in the HTML. -->
+    {#if needsPositionWrapper}
+      <div class="position-wrapper" style="{positionStyle} {advancedStyles}">
+        <SceneComponent {config} {colorTheme}>
+          {#each children as child, i (child.id || i)}
+            <MotionBox
+              class="child-wrapper scene-child"
+              motion={child.config?.motion}
+              ambient={child.config?.ambient}
+              scrollEffect={child.config?.scrollEffect}
+              delayOffset={childStagger * i}
+            >
+              <svelte:self
+                type={child.type}
+                config={child.config || child}
+                {colorTheme}
+                {siteContext}
+                {user}
+              />
+            </MotionBox>
+          {/each}
+        </SceneComponent>
+      </div>
+    {:else}
+      <SceneComponent {config} {colorTheme}>
+        {#each children as child, i (child.id || i)}
+          <MotionBox
+            class="child-wrapper scene-child"
+            motion={child.config?.motion}
+            ambient={child.config?.ambient}
+            scrollEffect={child.config?.scrollEffect}
+            delayOffset={childStagger * i}
+          >
+            <svelte:self
+              type={child.type}
+              config={child.config || child}
+              {colorTheme}
+              {siteContext}
+              {user}
+            />
+          </MotionBox>
+        {/each}
+      </SceneComponent>
+    {/if}
   {:else}
     <!-- Unknown component type - render as placeholder -->
     <div class="unknown-component">
@@ -894,8 +964,18 @@
     box-sizing: border-box;
   }
 
-  .child-wrapper {
+  /* `:global` because .child-wrapper is now emitted by MotionBox — a scoped rule
+     only survives for elements Svelte can see in this file's own markup. */
+  :global(.child-wrapper) {
     box-sizing: border-box;
+  }
+
+  /* Children of a scene sit over its canvas, which is absolutely positioned and
+     would otherwise paint on top of them. */
+  :global(.scene-child) {
+    position: relative;
+    z-index: 1;
+    width: 100%;
   }
 
   /* Hero overlay for container-based heroes on the public frontend */
@@ -910,7 +990,7 @@
     pointer-events: none;
   }
 
-  .has-overlay > .child-wrapper {
+  .has-overlay > :global(.child-wrapper) {
     position: relative;
     z-index: 1;
   }

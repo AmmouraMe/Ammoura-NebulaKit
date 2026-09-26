@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_STORE_NAME } from '$lib/branding';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { cartStore } from '../../lib/stores/cart.ts';
@@ -27,7 +28,7 @@
 </script>
 
 <svelte:head>
-  <title>{$t('cart.title')} - {$page.data.storeName || 'Hermes eCommerce'}</title>
+  <title>{$t('cart.title')} - {$page.data.storeName || DEFAULT_STORE_NAME}</title>
 </svelte:head>
 
 <div class="cart-header">
