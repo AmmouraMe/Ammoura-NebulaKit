@@ -18,8 +18,10 @@ vi.mock('$lib/server/db/fulfillment-relays', () => ({
 }));
 
 const mockGetOrderById = vi.fn();
+const mockUpdateOrderShippingAddress = vi.fn();
 vi.mock('$lib/server/db/orders', () => ({
-  getOrderById: (...args: unknown[]) => mockGetOrderById(...args)
+  getOrderById: (...args: unknown[]) => mockGetOrderById(...args),
+  updateOrderShippingAddress: (...args: unknown[]) => mockUpdateOrderShippingAddress(...args)
 }));
 
 const mockRelayPaidOrderToPrintful = vi.fn();
@@ -85,6 +87,7 @@ interface FulfillmentPageData {
     lastResponse: string | null;
     orderTotal: number | null;
     customerEmail: string | null;
+    shippingAddress: Record<string, string> | null;
   }>;
   recentlyFulfilled: unknown[];
   untrackedOrders: Array<{ id: string; total: number; createdAt: number }>;
@@ -152,6 +155,33 @@ describe('/admin/orders/fulfillment load', () => {
     const result = await runLoad();
 
     expect(result.relays[0].customerEmail).toBeNull();
+  });
+
+  it('offers the address for editing on a dead-lettered relay', async () => {
+    mockGetOrderById.mockResolvedValue({
+      ...order,
+      shipping_address: JSON.stringify({
+        email: 'john@example.com',
+        city: 'Leeds',
+        country: 'Other'
+      })
+    });
+
+    const result = await runLoad();
+
+    expect(result.relays[0].shippingAddress).toMatchObject({
+      city: 'Leeds',
+      country: 'Other',
+      address: ''
+    });
+  });
+
+  it('does not offer the address on a relay that is still retrying', async () => {
+    mockGetUnsettledRelays.mockResolvedValue([{ ...relayRow, status: 'pending' }]);
+
+    const result = await runLoad();
+
+    expect(result.relays[0].shippingAddress).toBeNull();
   });
 
   it('lists paid orders that were never relayed at all', async () => {
@@ -311,5 +341,112 @@ describe('/admin/orders/fulfillment relayOrder action', () => {
     const result = await actions.relayOrder(actionEvent({}));
 
     expect(result).toMatchObject({ status: 400 });
+  });
+});
+
+describe('/admin/orders/fulfillment updateAddress action', () => {
+  const storedAddress = {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@example.com',
+    phone: '555-0100',
+    address: '1 Old Road',
+    city: 'Leeds',
+    state: '',
+    zipCode: 'LS1 1AA',
+    country: 'Other'
+  };
+
+  const fields = {
+    relayId: 'relay-1',
+    orderId: 'order-1',
+    firstName: 'John',
+    lastName: 'Doe',
+    phone: '555-0100',
+    address: '  1 New Road ',
+    city: 'Leeds',
+    state: '',
+    zipCode: 'LS1 1AA',
+    country: 'GB'
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetFulfillmentRelay.mockResolvedValue(relayRow);
+    mockGetOrderById.mockResolvedValue({
+      ...order,
+      shipping_address: JSON.stringify(storedAddress)
+    });
+    mockUpdateOrderShippingAddress.mockResolvedValue(true);
+  });
+
+  it('saves the corrected address, keeping the email, without retrying', async () => {
+    const result = await actions.updateAddress(actionEvent(fields));
+
+    expect(mockUpdateOrderShippingAddress).toHaveBeenCalledWith(
+      { tag: 'db' },
+      'site-1',
+      'order-1',
+      { ...storedAddress, address: '1 New Road', country: 'GB' }
+    );
+    expect(mockRelayPaidOrderToPrintful).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ success: true });
+  });
+
+  it('stores a country name as its ISO code', async () => {
+    await actions.updateAddress(actionEvent({ ...fields, country: 'United Kingdom' }));
+
+    expect(mockUpdateOrderShippingAddress.mock.calls[0][3]).toMatchObject({ country: 'GB' });
+  });
+
+  it('refuses a country Printful cannot ship to', async () => {
+    const result = await actions.updateAddress(actionEvent({ ...fields, country: 'Other' }));
+
+    expect(result).toMatchObject({ status: 400 });
+    expect(JSON.stringify(result)).toContain('Other');
+    expect(mockUpdateOrderShippingAddress).not.toHaveBeenCalled();
+  });
+
+  it('names every missing part of the address', async () => {
+    const result = await actions.updateAddress(
+      actionEvent({ ...fields, firstName: '', lastName: ' ', city: '', zipCode: '' })
+    );
+
+    expect(result).toMatchObject({ status: 400 });
+    const text = JSON.stringify(result);
+    expect(text).toContain('name');
+    expect(text).toContain('city');
+    expect(text).toContain('postal code');
+    expect(mockUpdateOrderShippingAddress).not.toHaveBeenCalled();
+  });
+
+  it('refuses a relay that is still retrying on its own', async () => {
+    mockGetFulfillmentRelay.mockResolvedValue({ ...relayRow, status: 'pending' });
+
+    const result = await actions.updateAddress(actionEvent(fields));
+
+    expect(result).toMatchObject({ status: 409 });
+    expect(mockUpdateOrderShippingAddress).not.toHaveBeenCalled();
+  });
+
+  it('refuses a relay that belongs to another site', async () => {
+    mockGetFulfillmentRelay.mockResolvedValue(null);
+
+    const result = await actions.updateAddress(actionEvent(fields));
+
+    expect(result).toMatchObject({ status: 404 });
+    expect(mockUpdateOrderShippingAddress).not.toHaveBeenCalled();
+  });
+
+  it('refuses a request with no relay named', async () => {
+    const result = await actions.updateAddress(actionEvent({}));
+
+    expect(result).toMatchObject({ status: 400 });
+  });
+
+  it('rejects a user without order write permission', async () => {
+    await expect(actions.updateAddress(actionEvent(fields, customerUser))).rejects.toMatchObject({
+      status: 403
+    });
   });
 });

@@ -10,6 +10,7 @@ import {
   getOrderByStripeSessionId,
   setOrderStripeSession,
   markOrderPaid,
+  updateOrderShippingAddress,
   type DBOrder,
   type DBOrderItem,
   type CreateOrderData
@@ -664,6 +665,39 @@ describe('Orders Repository', () => {
 
       expect(mockBind).toHaveBeenCalledWith('cs_test_123', expect.any(Number), 'order-1', siteId);
       expect(mockRun).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateOrderShippingAddress', () => {
+    it('writes the address as JSON, scoped by site', async () => {
+      const mockRun = vi.fn().mockResolvedValue({ meta: { changes: 1 } });
+      const mockBind = vi.fn().mockReturnValue({ run: mockRun });
+      const mockPrepare = vi.fn().mockReturnValue({ bind: mockBind });
+      const mockDB = { prepare: mockPrepare } as unknown as D1Database;
+
+      const result = await updateOrderShippingAddress(mockDB, siteId, 'order-1', {
+        city: 'Leeds',
+        country: 'GB'
+      });
+
+      expect(mockPrepare).toHaveBeenCalledWith(expect.stringContaining('AND site_id = ?'));
+      expect(mockBind).toHaveBeenCalledWith(
+        '{"city":"Leeds","country":"GB"}',
+        expect.any(Number),
+        'order-1',
+        siteId
+      );
+      expect(result).toBe(true);
+    });
+
+    it('returns false when no order on this site matched', async () => {
+      const mockRun = vi.fn().mockResolvedValue({ meta: { changes: 0 } });
+      const mockBind = vi.fn().mockReturnValue({ run: mockRun });
+      const mockDB = {
+        prepare: vi.fn().mockReturnValue({ bind: mockBind })
+      } as unknown as D1Database;
+
+      expect(await updateOrderShippingAddress(mockDB, siteId, 'order-x', {})).toBe(false);
     });
   });
 

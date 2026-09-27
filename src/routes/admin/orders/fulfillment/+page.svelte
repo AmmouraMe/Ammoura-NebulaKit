@@ -1,6 +1,8 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { toastStore } from '$lib/stores/toast';
+  import CountrySelect from '$lib/components/CountrySelect.svelte';
+  import { toCountryCode } from '$lib/data/countries';
   import type { ActionData, PageData } from './$types';
 
   export let data: PageData;
@@ -8,6 +10,7 @@
 
   let busyKey: string | null = null;
   let expanded: Record<string, boolean> = {};
+  let editingAddress: Record<string, boolean> = {};
 
   $: relays = data.relays;
   $: recentlyFulfilled = data.recentlyFulfilled;
@@ -45,10 +48,32 @@
     expanded = { ...expanded, [id]: !expanded[id] };
   }
 
+  function toggleAddress(id: string): void {
+    editingAddress = { ...editingAddress, [id]: !editingAddress[id] };
+  }
+
   function submitting(key: string) {
     busyKey = key;
     return async ({ update }: { update: () => Promise<void> }) => {
       await update();
+      busyKey = null;
+    };
+  }
+
+  // Close the editor once its address is saved; a failed save keeps it open.
+  function savingAddress(relayId: string) {
+    busyKey = `address-${relayId}`;
+    return async ({
+      result,
+      update
+    }: {
+      result: { type: string };
+      update: (opts?: { reset?: boolean }) => Promise<void>;
+    }) => {
+      await update({ reset: false });
+      if (result.type === 'success') {
+        editingAddress = { ...editingAddress, [relayId]: false };
+      }
       busyKey = null;
     };
   }
@@ -170,8 +195,83 @@
                       {busyKey === `relay-${relay.id}` ? 'Retrying…' : 'Retry now'}
                     </button>
                   </form>
+                  {#if relay.shippingAddress}
+                    <button class="link-btn" type="button" on:click={() => toggleAddress(relay.id)}>
+                      {editingAddress[relay.id] ? 'Cancel' : 'Edit address'}
+                    </button>
+                  {/if}
                 </td>
               </tr>
+              {#if relay.shippingAddress && editingAddress[relay.id]}
+                {@const addr = relay.shippingAddress}
+                <tr class="address-row">
+                  <td colspan="6">
+                    <form
+                      class="address-form"
+                      method="POST"
+                      action="?/updateAddress"
+                      use:enhance={() => savingAddress(relay.id)}
+                    >
+                      <input type="hidden" name="relayId" value={relay.id} />
+                      <input type="hidden" name="orderId" value={relay.orderId} />
+                      <p class="panel-note">
+                        Shipping address on order {relay.orderId}. Saving does not send it — press
+                        Retry now afterwards.
+                      </p>
+                      <div class="address-grid">
+                        <label>
+                          First name
+                          <input name="firstName" value={addr.firstName} />
+                        </label>
+                        <label>
+                          Last name
+                          <input name="lastName" value={addr.lastName} />
+                        </label>
+                        <label class="wide">
+                          Street address
+                          <input name="address" value={addr.address} required />
+                        </label>
+                        <label>
+                          City
+                          <input name="city" value={addr.city} required />
+                        </label>
+                        <label>
+                          State / region
+                          <input name="state" value={addr.state} />
+                        </label>
+                        <label>
+                          Postal code
+                          <input name="zipCode" value={addr.zipCode} required />
+                        </label>
+                        <label for="country-{relay.id}">
+                          Country
+                          <CountrySelect
+                            id="country-{relay.id}"
+                            name="country"
+                            value={toCountryCode(addr.country) ?? ''}
+                          />
+                          {#if addr.country && !toCountryCode(addr.country)}
+                            <span class="muted"
+                              >Stored as “{addr.country}”, which is not a country.</span
+                            >
+                          {/if}
+                        </label>
+                        <label>
+                          Phone
+                          <input name="phone" value={addr.phone} />
+                        </label>
+                      </div>
+                      <button
+                        class="retry-btn"
+                        type="submit"
+                        disabled={busyKey === `address-${relay.id}`}
+                      >
+                        {busyKey === `address-${relay.id}` ? 'Saving…' : 'Save address'}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {/if}
             {/each}
           </tbody>
         </table>
@@ -389,6 +489,41 @@
   .retry-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  .address-row td {
+    background: var(--color-bg-tertiary);
+  }
+
+  .address-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .address-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  .address-grid label.wide {
+    grid-column: 1 / -1;
+  }
+
+  .address-grid input,
+  .address-grid :global(select) {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 6px;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+    font-weight: 400;
   }
 
   .untracked-list,
