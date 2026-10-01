@@ -2,10 +2,15 @@
   import { checkoutStore } from '../stores/checkout';
   import type { ShippingAddress } from '../types/checkout';
   import CountrySelect from './CountrySelect.svelte';
+  import { addressFieldLabels, postalCodeRequired, regionRequired } from '$lib/data/countries';
 
   export let errors: Partial<Record<keyof ShippingAddress, string>> = {};
 
   $: formData = $checkoutStore.formData.shippingAddress;
+
+  $: ({ region: regionLabel, postalCode: postalLabel } = addressFieldLabels(formData.country));
+  $: needsRegion = regionRequired(formData.country);
+  $: needsPostalCode = postalCodeRequired(formData.country);
 
   function updateField(field: keyof ShippingAddress, value: string) {
     const updatedAddress = { ...formData, [field]: value };
@@ -106,7 +111,7 @@
     </div>
 
     <div class="form-group">
-      <label for="state">State *</label>
+      <label for="state">{regionLabel}{needsRegion ? ' *' : ''}</label>
       <input
         type="text"
         id="state"
@@ -122,7 +127,7 @@
 
   <div class="form-row">
     <div class="form-group">
-      <label for="zipCode">ZIP Code *</label>
+      <label for="zipCode">{postalLabel}{needsPostalCode ? ' *' : ''}</label>
       <input
         type="text"
         id="zipCode"

@@ -111,6 +111,69 @@ describe('Checkout Validation', () => {
       expect(errors.zipCode).toBeUndefined();
     });
 
+    describe('outside the United States', () => {
+      const ukAddress: ShippingAddress = {
+        ...validAddress,
+        city: 'London',
+        state: '',
+        zipCode: 'SW1A 1AA',
+        country: 'GB'
+      };
+
+      it('accepts a UK address with a lettered postcode and no state', () => {
+        expect(validateShippingAddress(ukAddress)).toEqual({});
+      });
+
+      it('accepts a Canadian postal code, with or without the space', () => {
+        for (const zipCode of ['K1A 0B1', 'k1a0b1']) {
+          const errors = validateShippingAddress({
+            ...ukAddress,
+            state: 'ON',
+            zipCode,
+            country: 'CA'
+          });
+          expect(errors.zipCode).toBeUndefined();
+        }
+      });
+
+      it('refuses a Canadian code in the wrong shape', () => {
+        const errors = validateShippingAddress({
+          ...ukAddress,
+          state: 'ON',
+          zipCode: '12345',
+          country: 'CA'
+        });
+        expect(errors.zipCode).toBe('Please enter a valid postal code');
+      });
+
+      it('still needs a province in Canada and a state in Australia', () => {
+        for (const country of ['CA', 'AU']) {
+          const errors = validateShippingAddress({ ...ukAddress, zipCode: 'K1A 0B1', country });
+          expect(errors.state).toBeDefined();
+        }
+      });
+
+      it('lets a Hong Kong address leave the postal code blank', () => {
+        const errors = validateShippingAddress({ ...ukAddress, zipCode: '', country: 'HK' });
+        expect(errors.zipCode).toBeUndefined();
+      });
+
+      it('still needs a postal code where the country has them', () => {
+        const errors = validateShippingAddress({ ...ukAddress, zipCode: '' });
+        expect(errors.zipCode).toBeDefined();
+      });
+
+      it('refuses a postal code that is plainly not one', () => {
+        const errors = validateShippingAddress({ ...ukAddress, zipCode: 'SW1A 1AA; DROP' });
+        expect(errors.zipCode).toBeDefined();
+      });
+
+      it('applies the same rules to the billing address', () => {
+        const { email: _email, phone: _phone, ...billing } = ukAddress;
+        expect(validateBillingAddress(billing as BillingAddress)).toEqual({});
+      });
+    });
+
     it('should error on short country', () => {
       const errors = validateShippingAddress({ ...validAddress, country: 'U' });
       expect(errors.country).toBeDefined();

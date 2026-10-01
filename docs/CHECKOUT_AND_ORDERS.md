@@ -260,6 +260,23 @@ holds, and `POST /api/checkout/session` now rejects an unresolvable country
 **before** taking the money. Addresses stored before 2026-09-20 hold names
 rather than codes; `toCountryCode` still reads them.
 
+**State and postal code follow the country.** Until 2026-10-01 the checkout
+held every address to US rules — a five-digit ZIP and a required state — so
+the full country list was a list nobody outside the US could finish checkout
+with. Now, from the same module:
+
+- `regionRequired(country)` — a state or province is required only in `US`,
+  `CA` and `AU`, where Printful needs one. Elsewhere it is optional.
+- `postalCodeRequired(country)` — required except in the countries that have
+  no postal codes (`POSTCODE_FREE_COUNTRY_CODES`: Hong Kong, the UAE, Qatar and
+  others), where the field may be left blank.
+- `isPostalCode(code, country)` — the US ZIP shape for `US`, `A1A 1A1` for
+  `CA`, and anywhere else any 2–10 letters, digits, spaces and hyphens.
+- `addressFieldLabels(country)` — "ZIP code" / "State" in the US, "Postal
+  code" / "Province" in Canada, "Postal code" / "State / region" elsewhere. Both
+  address forms label their fields with it and mark them required only when
+  they are.
+
 ## Multi-Tenant Isolation
 
 All order operations are **scoped by site_id**:
