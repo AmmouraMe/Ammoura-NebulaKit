@@ -162,7 +162,7 @@ Mobile (< 480px):      Compact layout, vertical meta layout, thinner lines
 
 1. `src/lib/utils/revisionGraphLayout.ts` - Layout algorithm utilities
 2. `src/lib/components/admin/RevisionHistoryGraph.test.ts` - Test suite
-3. `test-revision-graph-visual.html` - Visual test page
+3. `tests/manual/revision-graph-visual.html` - Visual test page
 
 ### Modified Files:
 

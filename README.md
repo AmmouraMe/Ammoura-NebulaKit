@@ -60,7 +60,7 @@ _progress_, and "ready for review" means _done_.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22 (`.nvmrc`)
 - npm
 
 ### Quick Setup
