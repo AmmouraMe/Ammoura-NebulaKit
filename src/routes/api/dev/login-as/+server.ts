@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dev } from '$app/environment';
+import { isDevLoginEnabled } from '$lib/server/dev-login';
 import {
   getDB,
   getAccountByEmail,
@@ -27,14 +28,15 @@ import type { Account } from '$lib/server/db/accounts';
  * - existing:   the stable dev@dev.local account, with one site
  * - superadmin: platform_engineer (legacy admin cookies) + platform account
  *
- * Hard-gated to `vite dev`: in any production build `dev` is false and the
- * endpoint 404s regardless of environment or headers.
+ * Gated by `isDevLoginEnabled`: always on under `vite dev`; in a built Worker
+ * only when the environment sets `DEV_LOGIN = "true"` (dev-staging does,
+ * production never does). Otherwise the endpoint 404s regardless of headers.
  */
 
 const COOKIE_OPTS = {
   path: '/',
   httpOnly: true,
-  secure: false, // dev only — never runs in production builds
+  secure: !dev, // plain http under vite dev; https on dev-staging
   sameSite: 'lax'
 } as const;
 
@@ -47,13 +49,13 @@ async function ensureAccount(db: D1Database, email: string, name: string): Promi
 }
 
 export const POST: RequestHandler = async ({ request, cookies, platform }) => {
-  if (!dev) {
+  const env = platform?.env as Record<string, unknown> | undefined;
+  if (!isDevLoginEnabled(env)) {
     throw error(404, 'Not found');
   }
 
   const { as } = (await request.json()) as { as?: string };
   const db = getDB(platform);
-  const env = platform?.env as Record<string, unknown> | undefined;
 
   if (as === 'new') {
     const stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -138,7 +140,7 @@ export const POST: RequestHandler = async ({ request, cookies, platform }) => {
  * Dev-only sign-out of everything (platform account + legacy cookies).
  */
 export const DELETE: RequestHandler = async ({ cookies, platform }) => {
-  if (!dev) {
+  if (!isDevLoginEnabled(platform?.env as Record<string, unknown> | undefined)) {
     throw error(404, 'Not found');
   }
 
