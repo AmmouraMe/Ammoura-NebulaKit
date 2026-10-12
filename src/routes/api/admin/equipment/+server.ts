@@ -11,7 +11,45 @@ import {
   updateEquipmentField,
   deleteEquipmentField
 } from '$lib/server/db';
-import type { EquipmentFieldType } from '$lib/types/equipment';
+import type { EquipmentFieldType, UpdateEquipmentData } from '$lib/types/equipment';
+import { sanitizeCapabilities } from '$lib/server/equipment/sanitizeCapabilities';
+import { getCatalogModel } from '$lib/data/equipmentCatalog';
+
+function optionalText(value: unknown, max: number): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : null;
+}
+
+/**
+ * The machine identity fields a request may set: make, model, catalog entry and
+ * capabilities. Only keys present in the body are returned, so a PUT that leaves
+ * one out keeps it.
+ */
+type MachineFields = Pick<
+  UpdateEquipmentData,
+  'make' | 'model' | 'catalogModelId' | 'capabilities' | 'kind'
+>;
+
+function machineFields(data: Record<string, unknown>): MachineFields {
+  const out: MachineFields = {};
+  if ('make' in data) out.make = optionalText(data.make, 80);
+  if ('model' in data) out.model = optionalText(data.model, 120);
+  if ('catalogModelId' in data) {
+    // Only a real catalog entry; anything else is a machine the owner described.
+    out.catalogModelId = getCatalogModel(optionalText(data.catalogModelId, 80))?.id ?? null;
+  }
+  if ('capabilities' in data) {
+    if (data.capabilities === null) {
+      out.capabilities = null;
+      out.kind = null;
+    } else {
+      const capabilities = sanitizeCapabilities(data.capabilities);
+      if (!capabilities) throw error(400, 'Invalid equipment capabilities');
+      out.capabilities = capabilities;
+      out.kind = capabilities.kind;
+    }
+  }
+  return out;
+}
 
 const VALID_FIELD_TYPES: EquipmentFieldType[] = [
   'text',
@@ -100,7 +138,8 @@ export const POST: RequestHandler = async ({ request, platform, locals }) => {
     const equipment = await createEquipment(db, siteId, {
       name: String(data.name).trim(),
       description: data.description ? String(data.description).trim() : undefined,
-      isActive: data.isActive !== false
+      isActive: data.isActive !== false,
+      ...machineFields(data)
     });
 
     return json(equipment, { status: 201 });
@@ -164,7 +203,7 @@ export const PUT: RequestHandler = async ({ request, platform, locals }) => {
     }
 
     // Update equipment
-    const updateData: Record<string, unknown> = {};
+    const updateData: Record<string, unknown> = { ...machineFields(data) };
     if (data.name !== undefined) {
       if (String(data.name).trim().length === 0) {
         throw error(400, 'Equipment name cannot be empty');

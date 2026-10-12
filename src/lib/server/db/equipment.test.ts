@@ -15,7 +15,10 @@ import {
   removeProductEquipment,
   getProductEquipmentWithFields,
   saveOrderItemEquipmentValues,
-  getOrderItemEquipmentValues
+  getOrderItemEquipmentValues,
+  setProductEquipmentSize,
+  getProductEquipmentLinks,
+  getProductFitInfo
 } from './equipment';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1044,6 +1047,149 @@ describe('equipment', () => {
       const values = await getOrderItemEquipmentValues(mockDb, 'order-item-1');
 
       expect(values).toEqual([]);
+    });
+  });
+
+  // --- Machine capabilities ---
+
+  describe('capabilities', () => {
+    const caps = {
+      kind: 'dtg-printer',
+      maxAreaIn: { widthIn: 16, heightIn: 20 },
+      substrates: ['cotton']
+    };
+    const row = {
+      id: 'eq-1',
+      site_id: testSiteId,
+      name: 'Epson SureColor F2100',
+      description: null,
+      is_active: 1,
+      kind: 'dtg-printer',
+      make: 'Epson',
+      model: 'SureColor F2100',
+      catalog_model_id: 'epson-surecolor-f2100',
+      capabilities: JSON.stringify(caps),
+      created_at: 1,
+      updated_at: 1
+    };
+
+    it('stores a catalog machine with its capabilities as JSON', async () => {
+      mockDb.first.mockResolvedValue(row);
+      const eq = await createEquipment(mockDb, testSiteId, {
+        name: row.name,
+        make: 'Epson',
+        model: 'SureColor F2100',
+        catalogModelId: 'epson-surecolor-f2100',
+        capabilities: caps as any
+      });
+      const bound = mockDb.bind.mock.calls[0];
+      expect(bound).toContain('dtg-printer');
+      expect(bound).toContain(JSON.stringify(caps));
+      expect(eq.capabilities).toEqual(caps);
+      expect(eq.make).toBe('Epson');
+      expect(eq.catalogModelId).toBe('epson-surecolor-f2100');
+    });
+
+    it('reads bad capabilities JSON as none', async () => {
+      mockDb.first.mockResolvedValue({ ...row, capabilities: '{not json' });
+      const eq = await getEquipmentById(mockDb, testSiteId, 'eq-1');
+      expect(eq?.capabilities).toBeNull();
+    });
+
+    it('reads legacy rows without the new columns', async () => {
+      mockDb.first.mockResolvedValue({
+        id: 'eq-0',
+        site_id: testSiteId,
+        name: 'Old',
+        description: null,
+        is_active: 1,
+        created_at: 1,
+        updated_at: 1
+      });
+      const eq = await getEquipmentById(mockDb, testSiteId, 'eq-0');
+      expect(eq).toMatchObject({ kind: null, make: null, capabilities: null });
+    });
+
+    it('keeps kind in step when capabilities change', async () => {
+      mockDb.first.mockResolvedValue(row);
+      await updateEquipment(mockDb, testSiteId, 'eq-1', { capabilities: caps as any });
+      const sql = mockDb.prepare.mock.calls
+        .map((c: string[]) => c[0])
+        .find((q: string) => q.startsWith('UPDATE equipment'));
+      expect(sql).toContain('capabilities = ?');
+      expect(sql).toContain('kind = ?');
+    });
+  });
+
+  describe('setProductEquipmentSize', () => {
+    it('updates the size, scoped by site', async () => {
+      const ok = await setProductEquipmentSize(mockDb, testSiteId, testProductId, 'eq', 'round-1');
+      expect(ok).toBe(true);
+      expect(mockDb.bind).toHaveBeenCalledWith('round-1', testSiteId, testProductId, 'eq');
+    });
+  });
+
+  describe('getProductEquipmentLinks', () => {
+    it("lists a machine's products with names and size", async () => {
+      mockDb.all.mockResolvedValue({
+        results: [
+          {
+            id: 'pe-1',
+            site_id: testSiteId,
+            product_id: 'p1',
+            equipment_id: 'eq',
+            size_id: 'round-1.25',
+            sort_order: 0,
+            created_at: 1,
+            product_name: '1¼" Pin',
+            equipment_name: 'ABM',
+            equipment_is_active: 1,
+            equipment_capabilities: null
+          }
+        ]
+      });
+      const links = await getProductEquipmentLinks(mockDb, testSiteId, { equipmentId: 'eq' });
+      expect(links[0]).toMatchObject({
+        productId: 'p1',
+        productName: '1¼" Pin',
+        sizeId: 'round-1.25',
+        equipmentIsActive: true
+      });
+      const sql = mockDb.prepare.mock.calls.at(-1)[0];
+      expect(sql).toContain('pe.equipment_id = ?');
+      expect(sql).toContain('pe.site_id = ?');
+    });
+
+    it('can list by product instead', async () => {
+      mockDb.all.mockResolvedValue({ results: [] });
+      await getProductEquipmentLinks(mockDb, testSiteId, { productId: 'p1' });
+      expect(mockDb.prepare.mock.calls.at(-1)[0]).toContain('pe.product_id = ?');
+    });
+  });
+
+  describe('getProductFitInfo', () => {
+    it('returns null for a product on another site', async () => {
+      mockDb.first.mockResolvedValue(null);
+      expect(await getProductFitInfo(mockDb, testSiteId, 'p-x')).toBeNull();
+    });
+
+    it('returns the template type and print areas in inches', async () => {
+      mockDb.first.mockResolvedValue({ name: 'Tee', product_type: 'tee' });
+      mockDb.all.mockResolvedValue({
+        results: [
+          { name: 'Front', phys_width: 12, phys_height: 16, unit: 'in', required_dpi: 150 },
+          { name: 'Pocket', phys_width: 101.6, phys_height: 101.6, unit: 'mm', required_dpi: 300 }
+        ]
+      });
+      const info = await getProductFitInfo(mockDb, testSiteId, testProductId);
+      expect(info?.templateType).toBe('tee');
+      expect(info?.printAreas[0]).toEqual({
+        name: 'Front',
+        widthIn: 12,
+        heightIn: 16,
+        requiredDpi: 150
+      });
+      expect(info?.printAreas[1].widthIn).toBeCloseTo(4);
     });
   });
 });
