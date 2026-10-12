@@ -4,10 +4,24 @@
   import { confirmStore } from '$lib/stores/confirm';
   import type { Equipment, EquipmentField, EquipmentFieldType } from '$lib/types/equipment';
   import type { MediaRequirements } from '$lib/types/customization';
+  import EquipmentCatalogPicker from '$lib/components/admin/equipment/EquipmentCatalogPicker.svelte';
+  import EquipmentCapabilitiesEditor from '$lib/components/admin/equipment/EquipmentCapabilitiesEditor.svelte';
+  import EquipmentProductLinks from '$lib/components/admin/equipment/EquipmentProductLinks.svelte';
+  import { KIND_LABELS } from '$lib/data/equipmentCatalog';
+  import { describeCapabilities, workflowGaps } from '$lib/utils/equipmentFit';
 
-  export let data: { equipment: Equipment[] };
+  export let data: {
+    equipment: Equipment[];
+    products: { id: string; name: string; templateType: string | null }[];
+  };
   let equipment: Equipment[] = data.equipment;
   $: equipment = data.equipment;
+  $: gaps = workflowGaps(equipment);
+
+  // Catalog, capabilities and product-link dialogs
+  let showCatalog = false;
+  let capabilitiesFor: Equipment | null = null;
+  let linksFor: Equipment | null = null;
 
   // Equipment modal state
   let showEquipmentModal = false;
@@ -334,15 +348,32 @@
   <div class="page-header">
     <h1>Equipment</h1>
     <p class="subtitle">
-      Manage equipment used to fulfill product orders. Each equipment piece defines fields that
-      customers fill in during checkout.
+      The printers, presses and machines you make products with. Pick yours from the catalog and its
+      capabilities fill in; link it to the products it makes and each one is checked against what
+      the machine can do. A machine can also ask customers for details at checkout.
     </p>
-    <button class="btn btn-primary" on:click={handleAddEquipment}>+ Add Equipment</button>
+    <div class="header-actions">
+      <button class="btn btn-primary" on:click={() => (showCatalog = true)}>
+        + Add from catalog
+      </button>
+      <button class="btn" on:click={handleAddEquipment}>+ Custom equipment</button>
+    </div>
   </div>
+
+  {#if gaps.length > 0}
+    <div class="gaps" role="status">
+      {#each gaps as gap}
+        <p>{gap}</p>
+      {/each}
+    </div>
+  {/if}
 
   {#if equipment.length === 0}
     <div class="empty-state">
-      <p>No equipment defined yet. Add equipment to define required information for fulfillment.</p>
+      <p>
+        No equipment yet. Add the printers, presses and button makers you use, and link them to the
+        products they make.
+      </p>
     </div>
   {:else}
     <div class="equipment-list">
@@ -350,14 +381,29 @@
         <div class="equipment-card" class:inactive={!eq.isActive}>
           <div class="card-header">
             <h3>{eq.name}</h3>
+            {#if eq.kind}
+              <span class="badge kind">{KIND_LABELS[eq.kind]}</span>
+            {/if}
             <span class="badge" class:active={eq.isActive} class:inactive={!eq.isActive}>
               {eq.isActive ? 'Active' : 'Inactive'}
             </span>
           </div>
+          {#if eq.make || eq.model}
+            <p class="make-model">{[eq.make, eq.model].filter(Boolean).join(' ')}</p>
+          {/if}
           {#if eq.description}
             <p class="description">{eq.description}</p>
           {/if}
+          {#if eq.capabilities}
+            <div class="chips">
+              {#each describeCapabilities(eq.capabilities) as chip}
+                <span class="chip">{chip}</span>
+              {/each}
+            </div>
+          {/if}
           <div class="card-actions">
+            <button class="btn btn-sm" on:click={() => (linksFor = eq)}>Products</button>
+            <button class="btn btn-sm" on:click={() => (capabilitiesFor = eq)}>Capabilities</button>
             <button class="btn btn-sm" on:click={() => handleManageFields(eq)}>
               Manage Fields
             </button>
@@ -371,6 +417,35 @@
     </div>
   {/if}
 </div>
+
+{#if showCatalog}
+  <EquipmentCatalogPicker
+    on:close={() => (showCatalog = false)}
+    on:created={async () => {
+      showCatalog = false;
+      await invalidateAll();
+    }}
+  />
+{/if}
+
+{#if capabilitiesFor}
+  <EquipmentCapabilitiesEditor
+    equipment={capabilitiesFor}
+    on:close={() => (capabilitiesFor = null)}
+    on:saved={async () => {
+      capabilitiesFor = null;
+      await invalidateAll();
+    }}
+  />
+{/if}
+
+{#if linksFor}
+  <EquipmentProductLinks
+    equipment={linksFor}
+    products={data.products}
+    on:close={() => (linksFor = null)}
+  />
+{/if}
 
 <!-- Equipment Add/Edit Modal -->
 {#if showEquipmentModal}
@@ -729,6 +804,7 @@
 
   .card-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
@@ -764,7 +840,53 @@
 
   .card-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .gaps {
+    border: 1px solid var(--color-warning, #b45309);
+    background: var(--color-warning-alpha, rgba(234, 179, 8, 0.1));
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .gaps p {
+    margin: 0.35rem 0;
+  }
+
+  .badge.kind {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+  }
+
+  .make-model {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .chip {
+    font-size: 0.72rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--color-primary-alpha);
+    color: var(--color-primary);
   }
 
   /* Buttons */

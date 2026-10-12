@@ -18,7 +18,8 @@ import {
   getOrderItemEquipmentValues,
   setProductEquipmentSize,
   getProductEquipmentLinks,
-  getProductFitInfo
+  getProductFitInfo,
+  getProductsForEquipmentLinking
 } from './equipment';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1190,6 +1191,22 @@ describe('equipment', () => {
         requiredDpi: 150
       });
       expect(info?.printAreas[1].widthIn).toBeCloseTo(4);
+    });
+  });
+
+  describe('getProductsForEquipmentLinking', () => {
+    it("lists the site's products with their template family", async () => {
+      mockDb.all.mockResolvedValue({
+        results: [
+          { id: 'p1', name: 'Tee', product_type: 'tee' },
+          { id: 'p2', name: 'Pin', product_type: null }
+        ]
+      });
+      expect(await getProductsForEquipmentLinking(mockDb, testSiteId)).toEqual([
+        { id: 'p1', name: 'Tee', templateType: 'tee' },
+        { id: 'p2', name: 'Pin', templateType: null }
+      ]);
+      expect(mockDb.bind).toHaveBeenCalledWith(testSiteId);
     });
   });
 });

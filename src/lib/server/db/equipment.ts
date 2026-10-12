@@ -544,6 +544,30 @@ export async function getProductEquipmentLinks(
   }));
 }
 
+/**
+ * Every product on the site with its template family, for the equipment page's
+ * "link a product" list (scoped by site).
+ */
+export async function getProductsForEquipmentLinking(
+  db: D1Database,
+  siteId: string
+): Promise<{ id: string; name: string; templateType: string | null }[]> {
+  const result = await execute<{ id: string; name: string; product_type: string | null }>(
+    db,
+    `SELECT p.id, p.name, t.product_type
+     FROM products p
+     LEFT JOIN product_templates t ON t.id = p.template_id
+     WHERE p.site_id = ?
+     ORDER BY p.name ASC`,
+    [siteId]
+  );
+  return (result.results || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    templateType: r.product_type ?? null
+  }));
+}
+
 export interface ProductFitInfo {
   productName: string;
   /** The product template's family ('tee', 'mug', ...), when it was made from one. */
