@@ -48,6 +48,8 @@ declare global {
         [key: string]: string | D1Database | R2Bucket | undefined;
       };
       context: ExecutionContext;
+      /** Cloudflare's request metadata: where the request came from, among other things. Absent in dev. */
+      cf?: IncomingRequestCfProperties;
       caches: CacheStorage & { default: Cache };
     }
   }

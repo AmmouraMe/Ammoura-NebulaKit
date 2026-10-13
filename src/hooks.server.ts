@@ -13,6 +13,8 @@ import { getPlatformSitesDomain } from '$lib/server/sites-service';
 import { resolveLocale, isSupportedLocale, LOCALE_COOKIE, DEFAULT_LOCALE } from '$lib/i18n';
 import { dev } from '$app/environment';
 import { createLogger, reportError, resolveLogLevel } from '$lib/server/observability';
+import { requestLocation, shouldBlockRequest } from '$lib/server/restricted-regions';
+import { RESTRICTED_REGION_MESSAGE } from '$lib/data/restrictedRegions';
 
 /**
  * SvelteKit hooks for multi-tenant site handling and authentication
@@ -101,6 +103,21 @@ export const handle: Handle = async ({ event, resolve }) => {
       environment: dev ? 'development' : 'production'
     }
   });
+
+  // No accounts or orders from places under US sanctions. 451 is the status
+  // for exactly this: refused for a legal reason. The body carries `error`
+  // because that is the field the signup and checkout pages show.
+  const location = requestLocation(event.platform?.cf, event.request?.headers);
+  if (shouldBlockRequest(location, event.url.pathname, event.request?.method)) {
+    event.locals.log.warn('restricted region refused', {
+      country: location.country,
+      region: location.region
+    });
+    return json(
+      { success: false, error: RESTRICTED_REGION_MESSAGE, message: RESTRICTED_REGION_MESSAGE },
+      { status: 451 }
+    );
+  }
 
   // Get the hostname from the request
   const hostname = event.url.hostname;

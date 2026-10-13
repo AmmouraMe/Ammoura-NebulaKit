@@ -148,4 +148,19 @@ describe('POST /api/checkout/session', () => {
     expect(repriceMock).not.toHaveBeenCalled();
     expect(createOrderMock).not.toHaveBeenCalled();
   });
+
+  it('refuses an order shipping to a sanctioned country, before any charge', async () => {
+    const res = await POST(request({ shipping_address: { ...address, country: 'Cuba' } }));
+    expect(res.status).toBe(451);
+    expect(createOrderMock).not.toHaveBeenCalled();
+    expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it('refuses a billing address in an occupied region of Ukraine', async () => {
+    const res = await POST(
+      request({ billing_address: { ...address, country: 'UA', state: 'Crimea' } })
+    );
+    expect(res.status).toBe(451);
+    expect(createOrderMock).not.toHaveBeenCalled();
+  });
 });

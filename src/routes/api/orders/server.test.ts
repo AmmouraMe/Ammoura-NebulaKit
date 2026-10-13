@@ -162,5 +162,17 @@ describe('Orders API', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('Missing required order information');
     });
+
+    it('refuses an order to a sanctioned country', async () => {
+      const response = await POST(
+        makeRequest({
+          ...baseOrderData,
+          shipping_address: { ...baseOrderData.shipping_address, country: 'North Korea' },
+          payment_method: { type: 'manual' }
+        })
+      );
+      expect(response.status).toBe(451);
+      expect(((await response.json()) as { success: boolean }).success).toBe(false);
+    });
   });
 });

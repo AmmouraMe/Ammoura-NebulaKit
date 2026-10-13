@@ -265,3 +265,51 @@ describe('resolveRequestId', () => {
     expect(resolveRequestId('!!!!')).toMatch(/^[0-9a-f-]{36}$/);
   });
 });
+
+describe('restricted regions', () => {
+  function event(path: string, method: string, cf?: { country?: string; regionCode?: string }) {
+    return {
+      url: new URL(`http://localhost:5173${path}`),
+      request: new Request(`http://localhost:5173${path}`, { method }),
+      locals: {} as App.Locals,
+      platform: cf ? { env: {}, cf } : undefined,
+      cookies: { get: vi.fn() }
+    } as unknown as RequestEvent;
+  }
+
+  it('refuses a signup from a sanctioned country with 451', async () => {
+    const resolve = vi.fn();
+    const res = await handle({
+      event: event('/api/account/signup', 'POST', { country: 'IR' }),
+      resolve
+    });
+    expect(res.status).toBe(451);
+    expect(((await res.json()) as { error: string }).error).toMatch(/sanctions/);
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('refuses a checkout from an occupied region of Ukraine', async () => {
+    const resolve = vi.fn();
+    const res = await handle({
+      event: event('/api/checkout/session', 'POST', { country: 'UA', regionCode: '43' }),
+      resolve
+    });
+    expect(res.status).toBe(451);
+  });
+
+  it('lets the rest of Ukraine through', async () => {
+    const resolve = vi.fn().mockResolvedValue(new Response());
+    const res = await handle({
+      event: event('/api/checkout/session', 'POST', { country: 'UA', regionCode: '30' }),
+      resolve
+    });
+    expect(res.status).not.toBe(451);
+    expect(resolve).toHaveBeenCalled();
+  });
+
+  it('leaves browsing open from a sanctioned country', async () => {
+    const resolve = vi.fn().mockResolvedValue(new Response());
+    const res = await handle({ event: event('/', 'GET', { country: 'CU' }), resolve });
+    expect(res.status).not.toBe(451);
+  });
+});

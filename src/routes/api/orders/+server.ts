@@ -12,6 +12,8 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { getDB } from '$lib/server/db';
 import { createOrder } from '$lib/server/db/orders';
+import { toCountryCode } from '$lib/data/countries';
+import { isRestrictedAddress, RESTRICTED_REGION_MESSAGE } from '$lib/data/restrictedRegions';
 import {
   saveEquipmentValuesForOrderItems,
   type OrderItemEquipmentValueSubmission
@@ -89,6 +91,17 @@ export async function POST({ request, platform, locals }: RequestEvent): Promise
 
     if (!data.shipping_address || !data.billing_address || !data.payment_method) {
       return json({ success: false, error: 'Missing required order information' }, { status: 400 });
+    }
+
+    // No orders to or from places under US sanctions (see restrictedRegions).
+    const addresses = [data.shipping_address, data.billing_address];
+    if (
+      addresses.some((address) => {
+        const country = toCountryCode(address.country ?? '');
+        return country !== null && isRestrictedAddress(country, address.state);
+      })
+    ) {
+      return json({ success: false, error: RESTRICTED_REGION_MESSAGE }, { status: 451 });
     }
 
     // Create order in database

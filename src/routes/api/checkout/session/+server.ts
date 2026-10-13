@@ -11,6 +11,7 @@ import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db/connection';
 import { createOrder, setOrderStripeSession } from '$lib/server/db/orders';
 import { toCountryCode } from '$lib/data/countries';
+import { isRestrictedAddress, RESTRICTED_REGION_MESSAGE } from '$lib/data/restrictedRegions';
 import {
   saveEquipmentValuesForOrderItems,
   type OrderItemEquipmentValueSubmission
@@ -105,6 +106,16 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
   }
   data.shipping_address = { ...data.shipping_address, country: shippingCountry };
   data.billing_address = { ...data.billing_address, country: billingCountry };
+
+  // The request hook refuses these places by where the request comes from; a
+  // VPN gets past that, so the addresses on the order are checked as well.
+  const billingState = data.billing_address.state;
+  if (
+    isRestrictedAddress(shippingCountry, data.shipping_address.state) ||
+    isRestrictedAddress(billingCountry, typeof billingState === 'string' ? billingState : null)
+  ) {
+    return json({ success: false, error: RESTRICTED_REGION_MESSAGE }, { status: 451 });
+  }
 
   const paymentSettings = await getPaymentSettings(db, siteId, encryptionKey);
   if (!paymentSettings.stripeEnabled || !paymentSettings.stripeSecretKey) {
