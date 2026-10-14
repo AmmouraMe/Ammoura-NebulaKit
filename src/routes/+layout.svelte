@@ -5,6 +5,7 @@
   import ConfirmModal from '../lib/components/ConfirmModal.svelte';
   import FrontendComponentRenderer from '../lib/components/FrontendComponentRenderer.svelte';
   import PromptModal from '../lib/components/PromptModal.svelte';
+  import RegionalPricingNotice from '../lib/components/RegionalPricingNotice.svelte';
   import ThemePreviewIndicator from '../lib/components/ThemePreviewIndicator.svelte';
   import ToastContainer from '../lib/components/ToastContainer.svelte';
   import { authState } from '../lib/stores/auth';
@@ -290,6 +291,10 @@
         user={data.currentUser || data.currentAccount}
       />
     {/key}
+  {/if}
+
+  {#if !isAdminPage}
+    <RegionalPricingNotice pricing={data.regionalPricing} />
   {/if}
 
   <slot />

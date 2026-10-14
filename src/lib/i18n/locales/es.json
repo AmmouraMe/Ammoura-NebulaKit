@@ -203,5 +203,7 @@
   "home.ctaTitle": "¿Listo para empezar tu negocio?",
   "home.ctaSubtitle": "Únete a emprendedores de todo el mundo que construyen sus sueños con sus propias tiendas en línea.",
   "home.createYourStore": "Crea tu tienda",
-  "home.learnMore": "Saber más"
+  "home.learnMore": "Saber más",
+  "pricing.regionalNoticeAll": "Precios ajustados para {country}: {percent}% de descuento.",
+  "pricing.regionalNoticeDigital": "Los productos digitales tienen un {percent}% de descuento para {country}."
 }

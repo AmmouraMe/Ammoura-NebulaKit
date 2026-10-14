@@ -12,6 +12,7 @@ import { getDB } from '$lib/server/db/connection';
 import { createOrder, setOrderStripeSession } from '$lib/server/db/orders';
 import { toCountryCode } from '$lib/data/countries';
 import { isRestrictedAddress, RESTRICTED_REGION_MESSAGE } from '$lib/data/restrictedRegions';
+import { orderMultiplier } from '$lib/utils/regionalPricing';
 import {
   saveEquipmentValuesForOrderItems,
   type OrderItemEquipmentValueSubmission
@@ -124,9 +125,24 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
 
   // Everything the browser said about money is discarded here and re-derived
   // from the products table; only the shipping selection is carried over.
+  // Regional pricing: the least generous of where the request comes from and
+  // the two addresses, so a VPN or a borrowed address alone buys nothing. A
+  // request whose origin is unknown (Tor, no Cloudflare data) gets base price.
+  const regionalSettings = locals.regionalPricing;
+  const regional =
+    regionalSettings?.enabled && locals.country
+      ? {
+          settings: regionalSettings,
+          multiplier: orderMultiplier(regionalSettings, [
+            locals.country,
+            billingCountry,
+            shippingCountry
+          ])
+        }
+      : undefined;
   let priced;
   try {
-    priced = await repriceCheckout(db, siteId, data.items, data.shipping_cost);
+    priced = await repriceCheckout(db, siteId, data.items, data.shipping_cost, regional);
   } catch (err) {
     if (err instanceof CheckoutPricingError) {
       throw error(400, err.message);
@@ -209,7 +225,16 @@ export const POST: RequestHandler = async ({ request, platform, locals, url }) =
       customer_email: data.shipping_address.email || undefined,
       success_url: `${url.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${url.origin}/checkout?canceled=1`,
-      metadata: { orderId: order.id, siteId }
+      metadata: {
+        orderId: order.id,
+        siteId,
+        // So the owner can see in Stripe why an order cost less than list.
+        ...(regional && regional.multiplier < 1
+          ? {
+              regionalPricing: `${locals.country} ×${regional.multiplier}`
+            }
+          : {})
+      }
     });
   } catch (err) {
     console.error('Failed to create Stripe Checkout Session:', err);

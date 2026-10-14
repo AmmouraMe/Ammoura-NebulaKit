@@ -6,6 +6,7 @@ import { resolveComponentRefs } from '$lib/server/db/components';
 import { translateComponents, translateProducts } from '$lib/server/i18n/content-translations';
 import * as colorThemes from '$lib/server/db/color-themes';
 import type { PageComponent, PageProperties } from '$lib/types/pages';
+import { shopperPricing, withShopperPrice } from '$lib/server/regional-pricing';
 
 export const load: PageServerLoad = async ({ platform, locals, url }) => {
   // If platform is not available (development without D1), fall back to empty array
@@ -71,11 +72,13 @@ export const load: PageServerLoad = async ({ platform, locals, url }) => {
       await getAllProducts(db, siteId)
     );
 
-    // Transform database products to match the Product type
+    // Transform database products to match the Product type, at this
+    // shopper's regional price
+    const pricing = shopperPricing(locals);
     const products = await Promise.all(
       dbProducts.map(async (p) => {
         const fulfillmentOptions = await getProductFulfillmentOptions(db, siteId, p.id);
-        return {
+        return withShopperPrice(pricing, {
           id: p.id,
           name: p.name,
           description: p.description,
@@ -86,7 +89,7 @@ export const load: PageServerLoad = async ({ platform, locals, url }) => {
           type: p.type,
           tags: JSON.parse(p.tags || '[]') as string[],
           fulfillmentOptions
-        };
+        });
       })
     );
 

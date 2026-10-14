@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { parseRegionalPricing, type RegionalPricingSettings } from '$lib/utils/regionalPricing';
 import { DEFAULT_STORE_NAME } from '$lib/branding';
 import { encrypt, decrypt } from '../crypto.js';
 
@@ -369,6 +370,44 @@ export async function updateComingSoonSettings(
   settings: ComingSoonSettings
 ): Promise<void> {
   await upsertSiteSetting(db, siteId, COMING_SOON_SETTING_KEY, settings.enabled ? 'true' : 'false');
+}
+
+/**
+ * Regional pricing (`$lib/utils/regionalPricing`): one JSON value under one
+ * key. Read from the same settings rows the request hook already loads, so it
+ * costs no extra query per page.
+ */
+export const REGIONAL_PRICING_SETTING_KEY = 'regional_pricing';
+
+export function readRegionalPricing(settings: Map<string, string>): RegionalPricingSettings {
+  const raw = settings.get(REGIONAL_PRICING_SETTING_KEY);
+  if (!raw) return parseRegionalPricing(null);
+  try {
+    return parseRegionalPricing(JSON.parse(raw));
+  } catch {
+    return parseRegionalPricing(null);
+  }
+}
+
+export async function getRegionalPricingSettings(
+  db: D1Database,
+  siteId: string
+): Promise<RegionalPricingSettings> {
+  const settings = await getSiteSettings(db, siteId);
+  return readRegionalPricing(new Map(settings.map((s) => [s.setting_key, s.setting_value])));
+}
+
+export async function updateRegionalPricingSettings(
+  db: D1Database,
+  siteId: string,
+  settings: RegionalPricingSettings
+): Promise<void> {
+  await upsertSiteSetting(
+    db,
+    siteId,
+    REGIONAL_PRICING_SETTING_KEY,
+    JSON.stringify(parseRegionalPricing(settings))
+  );
 }
 
 export async function updateLanguageSettings(

@@ -20,7 +20,7 @@
     }
 
     try {
-      const response = await fetch(`/api/products/${productId}`);
+      const response = await fetch(`/api/products/${productId}?pricing=shopper`);
       if (response.ok) {
         const data = (await response.json()) as Product;
         product = data;

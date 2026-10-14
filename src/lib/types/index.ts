@@ -10,6 +10,8 @@ export interface ProductVariant {
   size?: string;
   color?: string;
   price: number;
+  /** The base price, when `price` was lowered by regional pricing. */
+  regularPrice?: number;
   stockQuantity?: number | null;
 }
 
@@ -18,6 +20,8 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  /** The base price, when `price` was lowered by regional pricing. */
+  regularPrice?: number;
   image: string;
   category: string;
   stock: number;
