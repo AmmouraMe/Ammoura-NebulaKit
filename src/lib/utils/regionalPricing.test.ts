@@ -96,3 +96,15 @@ describe('appliesToProduct', () => {
     expect(appliesToProduct(DEFAULT_REGIONAL_PRICING, 'digital')).toBe(false);
   });
 });
+
+describe('the price level index', () => {
+  it('has US at 1 and every value in a believable range', async () => {
+    const { PRICE_LEVEL_INDEX } = await import('$lib/data/priceLevelIndex');
+    expect(PRICE_LEVEL_INDEX.US[0]).toBe(1);
+    expect(Object.keys(PRICE_LEVEL_INDEX).length).toBeGreaterThan(150);
+    for (const [code, [ratio]] of Object.entries(PRICE_LEVEL_INDEX)) {
+      expect(ratio, code).toBeGreaterThanOrEqual(0.08);
+      expect(ratio, code).toBeLessThanOrEqual(2);
+    }
+  });
+});

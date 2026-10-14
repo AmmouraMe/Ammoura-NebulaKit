@@ -109,7 +109,13 @@ export const handle: Handle = async ({ event, resolve }) => {
   // No accounts or orders from places under US sanctions. 451 is the status
   // for exactly this: refused for a legal reason. The body carries `error`
   // because that is the field the signup and checkout pages show.
-  const location = requestLocation(event.platform?.cf, event.request?.headers);
+  // In dev, Wrangler fills `platform.cf` with the developer's own location; a
+  // `cf-ipcountry` header sent by hand wins there, so any country can be tried.
+  const headers = event.request?.headers;
+  const location = requestLocation(
+    dev && headers?.has('cf-ipcountry') ? undefined : event.platform?.cf,
+    headers
+  );
   event.locals.country = location.country;
   event.locals.regionalPricing = DEFAULT_REGIONAL_PRICING;
   if (shouldBlockRequest(location, event.url.pathname, event.request?.method)) {

@@ -261,6 +261,7 @@
 <style>
   .settings-page {
     width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -281,6 +282,7 @@
     margin: 0 0 0.5rem 0;
   }
   .settings-card {
+    min-width: 0;
     background: var(--color-bg-primary);
     border-radius: 12px;
     padding: 1.5rem;
@@ -403,6 +405,11 @@
   }
   .preview-controls input {
     width: 11rem;
+    max-width: 100%;
+  }
+  .preview-controls label {
+    flex: 1 1 9rem;
+    min-width: 0;
   }
   .table-wrap {
     max-height: 28rem;

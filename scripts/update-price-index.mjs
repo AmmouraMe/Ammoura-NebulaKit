@@ -23,6 +23,8 @@ const OUT = join(root, 'src/lib/data/priceLevelIndex.ts');
 const COUNTRIES_FILE = join(root, 'src/lib/data/countries.ts');
 
 const thisYear = new Date().getUTCFullYear();
+const PLAUSIBLE_MIN = 0.08;
+const PLAUSIBLE_MAX = 2;
 const range = `${thisYear - 8}:${thisYear}`;
 
 async function series(indicator) {
@@ -58,7 +60,14 @@ for (const [code, years] of ppp) {
   if (common.length === 0) continue;
   const year = Math.max(...common);
   const ratio = years.get(year) / fx.get(code).get(year);
-  if (!Number.isFinite(ratio) || ratio <= 0) continue;
+  // Outside this range the two series disagree about the currency (Liberia
+  // reports PPP in US$ and the exchange rate in L$, giving 0.002) or the
+  // official rate is far from the real one (Iran, 2.2). Such a figure would
+  // price a country wrongly, so the country is left out and pays base price.
+  if (!Number.isFinite(ratio) || ratio < PLAUSIBLE_MIN || ratio > PLAUSIBLE_MAX) {
+    if (Number.isFinite(ratio)) console.warn(`Skipping ${code}: implausible ratio ${ratio}`);
+    continue;
+  }
   rows.push({ code, year, ratio: Math.round(ratio * 1000) / 1000 });
 }
 rows.sort((a, b) => a.code.localeCompare(b.code));
