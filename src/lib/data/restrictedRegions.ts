@@ -1,14 +1,18 @@
 /**
  * Places Ammoura does not serve: no signup, no checkout, no order. These are
- * the regions under comprehensive US sanctions (OFAC). Stripe refuses them
- * too, so an order from one would be taken and then never paid.
+ * the regions under comprehensive US sanctions (OFAC), plus Syria (below).
+ * Stripe refuses all of them, so an order from one would be taken and then
+ * never paid.
  *
  * This is one list on purpose. When OFAC's list changes, change it here and
- * nowhere else. Last checked against OFAC's sanctions programs: 2026-10-13.
+ * nowhere else. Last checked against OFAC's sanctions programs: 2026-10-14.
  *
- * Syria: most of its sanctions were lifted in 2025. It stays blocked until
- * that is confirmed against OFAC's current list, because blocking a lawful
- * country costs a few customers and serving an embargoed one costs far more.
+ * Syria is the exception: it is here because of Stripe, not OFAC. OFAC ended
+ * its Syria embargo in 2025 (only named people stay sanctioned), and the US
+ * dropped Syria as a state sponsor of terrorism on 2026-08-24. Stripe's
+ * restricted-businesses page still prohibits Syria, so a payment from there
+ * breaks Stripe's terms. Remove `SY` when Stripe drops it from that page:
+ * https://stripe.com/legal/restricted-businesses (still listed 2026-10-14).
  *
  * Russia and Belarus are not here. They are not under a full embargo, so a
  * person there may hold an account. Stripe does not support them, so a

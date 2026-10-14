@@ -1,7 +1,8 @@
 # Restricted regions
 
 Ammoura takes no accounts and no orders from places under comprehensive US
-sanctions (OFAC). Stripe refuses those places as well.
+sanctions (OFAC), or from Syria, which Stripe still prohibits. Stripe refuses
+all of these places.
 
 ## The list
 
@@ -13,8 +14,14 @@ to change it.
 - **Parts of Ukraine:** Crimea (`UA-43`), Sevastopol (`UA-40`), Donetsk
   (`UA-14`) and Luhansk (`UA-09`).
 
-Most of Syria's sanctions were lifted in 2025. Syria stays on the list until
-that is confirmed against OFAC's current list.
+Syria is on the list because of Stripe, not OFAC. OFAC ended its Syria
+embargo in 2025, and the US dropped Syria as a state sponsor of terrorism on
+2026-08-24; only named people (Assad and his associates, Captagon traffickers,
+ISIS and al-Qa'ida affiliates) stay sanctioned. Everyday civilian goods can be
+shipped there without an export license. Stripe's
+[restricted-businesses page](https://stripe.com/legal/restricted-businesses)
+still prohibits Syria (checked 2026-10-14), so a payment from there breaks
+Stripe's terms. Remove `SY` when Stripe drops it.
 
 Russia and Belarus are not on the list, because they are not under a full
 embargo. Stripe does not support them, so a payment from there fails at
