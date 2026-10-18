@@ -98,6 +98,12 @@ export class NebulaKitSiteClient {
     return payload as T;
   }
 
+  /** Any site API call, for tools that drive endpoints this client has no helper for. */
+  call<T = unknown>(method: string, path: string, body?: unknown): Promise<T> {
+    if (!path.startsWith('/api/v1/')) throw new Error('Only /api/v1/ paths are site API calls');
+    return this.request(method, path, body);
+  }
+
   describe(): Promise<SiteDescription> {
     return this.request('GET', '/api/v1/site');
   }

@@ -181,6 +181,13 @@ describe('NebulaKitSiteClient', () => {
     expect(await empty.describe()).toBeUndefined();
   });
 
+  it('makes arbitrary site API calls, but only under /api/v1/', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ ok: true }));
+    const client = new NebulaKitSiteClient('https://acme.test', 'k', fetchImpl as never);
+    expect(await client.call('PUT', '/api/v1/site/updates', { optedIn: [] })).toEqual({ ok: true });
+    expect(() => client.call('GET', '/admin')).toThrow('/api/v1/');
+  });
+
   it('refuses plain http to anything but localhost, and a missing key', () => {
     expect(() => new NebulaKitSiteClient('http://acme.test', 'k')).toThrow('https');
     expect(() => new NebulaKitSiteClient('https://acme.test', '')).toThrow('key is required');
