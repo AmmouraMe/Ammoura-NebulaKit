@@ -69,7 +69,7 @@ equipment page shows a banner when an active machine's need is not met.
 
 ## Data
 
-Migration `0108_equipment_capabilities.sql`:
+Migration `0110_equipment_capabilities.sql`:
 
 - `equipment.kind`, `make`, `model`, `catalog_model_id`, `capabilities` (JSON
   `EquipmentCapabilities`, `src/lib/types/equipmentCapabilities.ts`). A

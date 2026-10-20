@@ -1,4 +1,4 @@
--- Migration: 0108_equipment_capabilities
+-- Migration: 0110_equipment_capabilities
 -- Description: Let a site's equipment be a known machine with known capabilities.
 --   equipment.kind / make / model: what the machine is (e.g. 'dtg-printer',
 --     'Epson', 'SureColor F2100'). NULL kind = a legacy, free-form entry.
