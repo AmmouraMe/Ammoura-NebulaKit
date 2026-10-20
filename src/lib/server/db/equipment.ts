@@ -5,11 +5,15 @@
  */
 
 import { executeOne, execute, generateId, getCurrentTimestamp } from './connection.js';
+import { toInches } from '$lib/utils/printQuality';
 import type {
   Equipment,
   EquipmentField,
   EquipmentWithFields,
   ProductEquipment,
+  ProductEquipmentLink,
+  EquipmentCapabilities,
+  EquipmentKind,
   CreateEquipmentData,
   UpdateEquipmentData,
   CreateEquipmentFieldData,
@@ -22,6 +26,17 @@ import type {
 
 // --- Mapping functions ---
 
+/** Capabilities are JSON written by this module; a bad value reads as none rather than throwing. */
+function parseCapabilities(raw: string | null | undefined): EquipmentCapabilities | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as EquipmentCapabilities;
+    return parsed && typeof parsed === 'object' && typeof parsed.kind === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function mapToEquipment(row: DBEquipment): Equipment {
   return {
     id: row.id,
@@ -29,6 +44,11 @@ function mapToEquipment(row: DBEquipment): Equipment {
     name: row.name,
     description: row.description,
     isActive: row.is_active === 1,
+    kind: (row.kind as EquipmentKind | null) ?? null,
+    make: row.make ?? null,
+    model: row.model ?? null,
+    catalogModelId: row.catalog_model_id ?? null,
+    capabilities: parseCapabilities(row.capabilities),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -57,6 +77,7 @@ function mapToProductEquipment(row: DBProductEquipment): ProductEquipment {
     id: row.id,
     productId: row.product_id,
     equipmentId: row.equipment_id,
+    sizeId: row.size_id ?? null,
     sortOrder: row.sort_order,
     createdAt: row.created_at
   };
@@ -105,8 +126,9 @@ export async function createEquipment(
 
   await db
     .prepare(
-      `INSERT INTO equipment (id, site_id, name, description, is_active, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO equipment (id, site_id, name, description, is_active, kind, make, model,
+         catalog_model_id, capabilities, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       id,
@@ -114,6 +136,11 @@ export async function createEquipment(
       data.name,
       data.description ?? null,
       data.isActive !== undefined ? (data.isActive ? 1 : 0) : 1,
+      data.kind ?? data.capabilities?.kind ?? null,
+      data.make ?? null,
+      data.model ?? null,
+      data.catalogModelId ?? null,
+      data.capabilities ? JSON.stringify(data.capabilities) : null,
       timestamp,
       timestamp
     )
@@ -154,6 +181,31 @@ export async function updateEquipment(
   if (data.isActive !== undefined) {
     updates.push('is_active = ?');
     params.push(data.isActive ? 1 : 0);
+  }
+  if (data.kind !== undefined) {
+    updates.push('kind = ?');
+    params.push(data.kind);
+  }
+  if (data.make !== undefined) {
+    updates.push('make = ?');
+    params.push(data.make);
+  }
+  if (data.model !== undefined) {
+    updates.push('model = ?');
+    params.push(data.model);
+  }
+  if (data.catalogModelId !== undefined) {
+    updates.push('catalog_model_id = ?');
+    params.push(data.catalogModelId);
+  }
+  if (data.capabilities !== undefined) {
+    updates.push('capabilities = ?');
+    params.push(data.capabilities ? JSON.stringify(data.capabilities) : null);
+    // Capabilities carry the kind; keep the indexed column in step.
+    if (data.capabilities && data.kind === undefined) {
+      updates.push('kind = ?');
+      params.push(data.capabilities.kind);
+    }
   }
 
   if (updates.length === 0) {
@@ -390,17 +442,18 @@ export async function addProductEquipment(
   siteId: string,
   productId: string,
   equipmentId: string,
-  sortOrder: number = 0
+  sortOrder: number = 0,
+  sizeId: string | null = null
 ): Promise<ProductEquipment> {
   const id = generateId();
   const timestamp = getCurrentTimestamp();
 
   await db
     .prepare(
-      `INSERT INTO product_equipment (id, site_id, product_id, equipment_id, sort_order, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO product_equipment (id, site_id, product_id, equipment_id, size_id, sort_order, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(id, siteId, productId, equipmentId, sortOrder, timestamp)
+    .bind(id, siteId, productId, equipmentId, sizeId, sortOrder, timestamp)
     .run();
 
   const row = await executeOne<DBProductEquipment>(
@@ -432,6 +485,142 @@ export async function removeProductEquipment(
   return (result.meta?.changes || 0) > 0;
 }
 
+/**
+ * Change which size a linked product is made at (scoped by site)
+ */
+export async function setProductEquipmentSize(
+  db: D1Database,
+  siteId: string,
+  productId: string,
+  equipmentId: string,
+  sizeId: string | null
+): Promise<boolean> {
+  const result = await db
+    .prepare(
+      'UPDATE product_equipment SET size_id = ? WHERE site_id = ? AND product_id = ? AND equipment_id = ?'
+    )
+    .bind(sizeId, siteId, productId, equipmentId)
+    .run();
+  return (result.meta?.changes || 0) > 0;
+}
+
+interface DBProductEquipmentLinkRow extends DBProductEquipment {
+  product_name: string;
+  equipment_name: string;
+  equipment_is_active: number;
+  equipment_capabilities: string | null;
+}
+
+/**
+ * Product–equipment links with names, for one product or one machine (scoped by site).
+ */
+export async function getProductEquipmentLinks(
+  db: D1Database,
+  siteId: string,
+  by: { productId: string } | { equipmentId: string }
+): Promise<ProductEquipmentLink[]> {
+  const [column, value] =
+    'productId' in by ? ['pe.product_id', by.productId] : ['pe.equipment_id', by.equipmentId];
+  const result = await execute<DBProductEquipmentLinkRow>(
+    db,
+    `SELECT pe.*,
+            p.name AS product_name,
+            e.name AS equipment_name,
+            e.is_active AS equipment_is_active,
+            e.capabilities AS equipment_capabilities
+     FROM product_equipment pe
+     JOIN products p ON p.id = pe.product_id AND p.site_id = pe.site_id
+     JOIN equipment e ON e.id = pe.equipment_id AND e.site_id = pe.site_id
+     WHERE pe.site_id = ? AND ${column} = ?
+     ORDER BY pe.sort_order ASC, p.name ASC`,
+    [siteId, value]
+  );
+  return (result.results || []).map((row) => ({
+    ...mapToProductEquipment(row),
+    productName: row.product_name,
+    equipmentName: row.equipment_name,
+    equipmentIsActive: row.equipment_is_active === 1,
+    capabilities: parseCapabilities(row.equipment_capabilities)
+  }));
+}
+
+/**
+ * Every product on the site with its template family, for the equipment page's
+ * "link a product" list (scoped by site).
+ */
+export async function getProductsForEquipmentLinking(
+  db: D1Database,
+  siteId: string
+): Promise<{ id: string; name: string; templateType: string | null }[]> {
+  const result = await execute<{ id: string; name: string; product_type: string | null }>(
+    db,
+    `SELECT p.id, p.name, t.product_type
+     FROM products p
+     LEFT JOIN product_templates t ON t.id = p.template_id
+     WHERE p.site_id = ?
+     ORDER BY p.name ASC`,
+    [siteId]
+  );
+  return (result.results || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    templateType: r.product_type ?? null
+  }));
+}
+
+export interface ProductFitInfo {
+  productName: string;
+  /** The product template's family ('tee', 'mug', ...), when it was made from one. */
+  templateType: string | null;
+  printAreas: { name: string; widthIn: number; heightIn: number; requiredDpi: number }[];
+}
+
+/**
+ * What the fit checks need to know about a product: its template family and the
+ * physical print areas its customization zones were made from (scoped by site).
+ */
+export async function getProductFitInfo(
+  db: D1Database,
+  siteId: string,
+  productId: string
+): Promise<ProductFitInfo | null> {
+  const product = await executeOne<{ name: string; product_type: string | null }>(
+    db,
+    `SELECT p.name, t.product_type
+     FROM products p
+     LEFT JOIN product_templates t ON t.id = p.template_id
+     WHERE p.id = ? AND p.site_id = ?`,
+    [productId, siteId]
+  );
+  if (!product) return null;
+
+  const areas = await execute<{
+    name: string;
+    phys_width: number;
+    phys_height: number;
+    unit: string;
+    required_dpi: number;
+  }>(
+    db,
+    `SELECT a.name, a.phys_width, a.phys_height, a.unit, a.required_dpi
+     FROM product_customization_zones z
+     JOIN template_print_areas a ON a.id = z.print_area_id
+     WHERE z.site_id = ? AND z.product_id = ?
+     ORDER BY z.sort_order ASC`,
+    [siteId, productId]
+  );
+  return {
+    productName: product.name,
+    templateType: product.product_type ?? null,
+    printAreas: (areas.results || []).map((a) => ({
+      name: a.name,
+      widthIn: toInches(a.phys_width, a.unit),
+      heightIn: toInches(a.phys_height, a.unit),
+      requiredDpi: a.required_dpi
+    }))
+  };
+}
+
 // --- Product Equipment with Fields (for storefront / checkout) ---
 
 interface DBEquipmentJoinRow {
@@ -445,6 +634,11 @@ interface DBEquipmentJoinRow {
   eq_name: string;
   eq_description: string | null;
   eq_is_active: number;
+  eq_kind: string | null;
+  eq_make: string | null;
+  eq_model: string | null;
+  eq_catalog_model_id: string | null;
+  eq_capabilities: string | null;
   eq_created_at: number;
   eq_updated_at: number;
 }
@@ -466,6 +660,11 @@ export async function getProductEquipmentWithFields(
             e.name AS eq_name,
             e.description AS eq_description,
             e.is_active AS eq_is_active,
+            e.kind AS eq_kind,
+            e.make AS eq_make,
+            e.model AS eq_model,
+            e.catalog_model_id AS eq_catalog_model_id,
+            e.capabilities AS eq_capabilities,
             e.created_at AS eq_created_at,
             e.updated_at AS eq_updated_at
      FROM product_equipment pe
@@ -490,6 +689,11 @@ export async function getProductEquipmentWithFields(
       name: row.eq_name,
       description: row.eq_description,
       isActive: row.eq_is_active === 1,
+      kind: (row.eq_kind as EquipmentKind | null) ?? null,
+      make: row.eq_make ?? null,
+      model: row.eq_model ?? null,
+      catalogModelId: row.eq_catalog_model_id ?? null,
+      capabilities: parseCapabilities(row.eq_capabilities),
       createdAt: row.eq_created_at,
       updatedAt: row.eq_updated_at,
       fields

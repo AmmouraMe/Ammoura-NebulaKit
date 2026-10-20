@@ -15,6 +15,9 @@ export type EquipmentFieldType =
 // Re-export MediaRequirements from customization so consumers can use it
 export type { MediaRequirements } from './customization';
 
+import type { EquipmentCapabilities, EquipmentKind } from './equipmentCapabilities';
+export type { EquipmentCapabilities, EquipmentKind } from './equipmentCapabilities';
+
 /**
  * A piece of equipment available to a site.
  */
@@ -24,6 +27,14 @@ export interface Equipment {
   name: string;
   description: string | null;
   isActive: boolean;
+  /** What the machine is. Null for a legacy free-form entry. */
+  kind: EquipmentKind | null;
+  make: string | null;
+  model: string | null;
+  /** The built-in catalog entry it was added from, if any. */
+  catalogModelId: string | null;
+  /** The site's own copy of the machine's capabilities. */
+  capabilities: EquipmentCapabilities | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -35,6 +46,11 @@ export interface CreateEquipmentData {
   name: string;
   description?: string;
   isActive?: boolean;
+  kind?: EquipmentKind | null;
+  make?: string | null;
+  model?: string | null;
+  catalogModelId?: string | null;
+  capabilities?: EquipmentCapabilities | null;
 }
 
 /**
@@ -44,6 +60,11 @@ export interface UpdateEquipmentData {
   name?: string;
   description?: string | null;
   isActive?: boolean;
+  kind?: EquipmentKind | null;
+  make?: string | null;
+  model?: string | null;
+  catalogModelId?: string | null;
+  capabilities?: EquipmentCapabilities | null;
 }
 
 /**
@@ -108,8 +129,21 @@ export interface ProductEquipment {
   id: string;
   productId: string;
   equipmentId: string;
+  /** Which of the machine's sizes the product is made at (e.g. 'round-1.25'). */
+  sizeId: string | null;
   sortOrder: number;
   createdAt: number;
+}
+
+/**
+ * A product–equipment link with the names either side needs to show it: the
+ * equipment page lists a machine's products, the product editor its machines.
+ */
+export interface ProductEquipmentLink extends ProductEquipment {
+  productName: string;
+  equipmentName: string;
+  equipmentIsActive: boolean;
+  capabilities: EquipmentCapabilities | null;
 }
 
 /**
@@ -140,6 +174,11 @@ export interface DBEquipment {
   name: string;
   description: string | null;
   is_active: number;
+  kind: string | null;
+  make: string | null;
+  model: string | null;
+  catalog_model_id: string | null;
+  capabilities: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -168,6 +207,7 @@ export interface DBProductEquipment {
   site_id: string;
   product_id: string;
   equipment_id: string;
+  size_id: string | null;
   sort_order: number;
   created_at: number;
 }
