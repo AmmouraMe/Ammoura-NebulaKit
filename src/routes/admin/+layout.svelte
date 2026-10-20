@@ -1241,6 +1241,19 @@
             All Sites
             <span class="engineer-badge">PE</span>
           </a>
+          <a
+            href="/admin/control-room"
+            class:active={currentPath.startsWith('/admin/control-room')}
+            on:click={closeSidebar}
+            class="platform-engineer-link"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="4" width="18" height="12" rx="2" stroke-width="2"></rect>
+              <path d="M8 20h8M12 16v4" stroke-width="2"></path>
+            </svg>
+            Control Room
+            <span class="engineer-badge">PE</span>
+          </a>
         {/if}
       </nav>
 
