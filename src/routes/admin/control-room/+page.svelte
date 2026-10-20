@@ -140,6 +140,17 @@
             </div>
           </dl>
 
+          {#if data.pending[site.id]?.length}
+            <ul class="pending">
+              {#each data.pending[site.id] as item (item.releaseId)}
+                <li class:forced={item.decision === 'apply'}>
+                  <strong>{item.releaseId}</strong>
+                  <span>{item.decision === 'apply' ? 'to roll out' : 'offered to the owner'}</span>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+
           {#if site.lastError}
             <p class="error">{site.lastError}</p>
           {/if}
@@ -158,6 +169,50 @@
       {/each}
     </ul>
   {/if}
+
+  <section class="releases">
+    <h2>Releases</h2>
+    <p class="sub">
+      A security release goes to every site, whatever its owner chose. A feature release is only
+      offered, and each owner opts in. Rolling one out merges it into the site's repo and runs the
+      site's tests: <code>bun scripts/orchestrator.ts rollout</code>.
+    </p>
+    <form class="card form" method="POST" action="?/recordRelease" use:enhance={answer('release')}>
+      <label>Package <input name="package" placeholder="@nebulakit/security" required /></label>
+      <label>Version <input name="version" placeholder="0.1.1" required /></label>
+      <label>
+        Channel
+        <select name="channel">
+          <option value="security">Security (forced)</option>
+          <option value="feature">Feature (offered)</option>
+        </select>
+      </label>
+      <label>Git ref <input name="ref" placeholder="release/security-0.1.1" required /></label>
+      <label>Notes <input name="notes" placeholder="What changed" /></label>
+      <button class="btn primary" disabled={busy !== ''}>Record release</button>
+    </form>
+    {#if data.releases.length}
+      <ul class="list releases-list">
+        {#each data.releases as release (release.id)}
+          <li class="card site">
+            <div class="top">
+              <div class="who">
+                <h2>{release.id}</h2>
+                <span class="sub">{release.notes ?? release.ref}</span>
+              </div>
+              <span class="status" class:status-unreachable={release.channel === 'security'}
+                >{release.channel}</span
+              >
+            </div>
+            <form method="POST" action="?/removeRelease" use:enhance={answer('removeRelease')}>
+              <input type="hidden" name="id" value={release.id} />
+              <button class="btn" disabled={busy !== ''}>Remove from list</button>
+            </form>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </section>
 </div>
 
 <style>
@@ -292,6 +347,37 @@
   }
   .empty {
     color: var(--color-text-secondary);
+  }
+  .pending {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+  .pending li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    color: var(--color-text-secondary);
+  }
+  .pending li.forced strong {
+    color: var(--color-error, #b91c1c);
+  }
+  .releases {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1rem;
+  }
+  select {
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--color-border-secondary);
+    border-radius: 0.375rem;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font: inherit;
   }
   .btn {
     padding: 0.5rem 0.9rem;

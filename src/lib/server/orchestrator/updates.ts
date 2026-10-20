@@ -100,7 +100,9 @@ export function parseReleases(raw: unknown): Release[] {
       typeof r?.id !== 'string' ||
       !RELEASE_ID.test(r.id) ||
       typeof r.package !== 'string' ||
+      !r.package ||
       typeof r.version !== 'string' ||
+      !r.version ||
       (r.channel !== 'security' && r.channel !== 'feature') ||
       typeof r.ref !== 'string' ||
       !r.ref

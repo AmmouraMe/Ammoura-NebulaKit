@@ -4,6 +4,7 @@
  * view has no key field at all.
  */
 import { SITE_SLUG, type ClientSite, type ClientSiteStatus } from './registry';
+import { planRollout, type Release } from './updates';
 
 export interface ClientSiteView {
   id: string;
@@ -59,4 +60,37 @@ export function parseRegistration(
   if (!apiKey) return { ok: false, error: 'Paste the orchestrator key from the site.' };
 
   return { ok: true, value: { name, slug, baseUrl: url.origin, repo, apiKey } };
+}
+
+export interface PendingUpdate {
+  releaseId: string;
+  channel: 'security' | 'feature';
+  decision: 'apply' | 'offer';
+  reason: string;
+}
+
+/**
+ * What is still outstanding on each site: releases it should take
+ * (`apply`) or that wait on its owner (`offer`). Sites already on a release
+ * are left out. A site that is not healthy is not planned on stale data.
+ */
+export function pendingBySite(
+  sites: ClientSite[],
+  releases: Release[]
+): Record<string, PendingUpdate[]> {
+  const out: Record<string, PendingUpdate[]> = {};
+  const healthy = sites.filter((site) => site.status === 'healthy');
+  for (const planned of planRollout(
+    healthy.map((s) => ({ siteId: s.id, packages: s.packages, updates: s.updates })),
+    releases
+  )) {
+    if (planned.decision === 'current') continue;
+    (out[planned.siteId] ??= []).push({
+      releaseId: planned.release.id,
+      channel: planned.release.channel,
+      decision: planned.decision,
+      reason: planned.reason
+    });
+  }
+  return out;
 }

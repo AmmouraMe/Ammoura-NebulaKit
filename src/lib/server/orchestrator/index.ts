@@ -10,3 +10,4 @@ export * from './registry';
 export * from './site-client';
 export * from './updates';
 export * from './service';
+export * from './releases';

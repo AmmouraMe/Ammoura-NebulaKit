@@ -2,8 +2,15 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { getDB } from '$lib/server/db/connection';
 import { createActivityLog } from '$lib/server/db/activity-logs';
-import { D1Registry, registerSite, syncAll, syncSite } from '$lib/server/orchestrator';
-import { parseRegistration, toSiteView } from '$lib/server/orchestrator/view';
+import {
+  D1Registry,
+  D1ReleaseStore,
+  parseReleaseForm,
+  registerSite,
+  syncAll,
+  syncSite
+} from '$lib/server/orchestrator';
+import { parseRegistration, pendingBySite, toSiteView } from '$lib/server/orchestrator/view';
 
 /**
  * The control room: Ammoura's list of client NebulaKit sites. Platform
@@ -25,8 +32,17 @@ function requireEngineer(locals: App.Locals) {
 export const load: PageServerLoad = async ({ locals, platform }) => {
   requireEngineer(locals);
   const sites = registry(platform);
-  if (!sites) return { sites: [], configured: false };
-  return { sites: (await sites.list()).map(toSiteView), configured: true };
+  if (!sites) return { sites: [], releases: [], pending: {}, configured: false };
+  const [list, releases] = await Promise.all([
+    sites.list(),
+    new D1ReleaseStore(getDB(platform)).list()
+  ]);
+  return {
+    sites: list.map(toSiteView),
+    releases,
+    pending: pendingBySite(list, releases),
+    configured: true
+  };
 };
 
 export const actions: Actions = {
@@ -95,5 +111,29 @@ export const actions: Actions = {
       entity_name: site.name
     });
     return { success: `${site.name} is no longer listed. The site itself is untouched.` };
+  },
+
+  recordRelease: async ({ request, locals, platform }) => {
+    const user = requireEngineer(locals);
+    const parsed = parseReleaseForm(await request.formData());
+    if (!parsed.ok) return fail(400, { error: parsed.error });
+    const db = getDB(platform);
+    await new D1ReleaseStore(db).save(parsed.value);
+    await createActivityLog(db, locals.siteId || 'default-site', {
+      user_id: user.id,
+      action: 'Recorded a release',
+      entity_type: 'orchestrator_release',
+      entity_id: parsed.value.id,
+      entity_name: parsed.value.id
+    });
+    return { success: `${parsed.value.id} is recorded.` };
+  },
+
+  removeRelease: async ({ request, locals, platform }) => {
+    requireEngineer(locals);
+    const id = String((await request.formData()).get('id') ?? '');
+    return (await new D1ReleaseStore(getDB(platform)).remove(id))
+      ? { success: `${id} is no longer listed.` }
+      : fail(404, { error: 'No such release.' });
   }
 };

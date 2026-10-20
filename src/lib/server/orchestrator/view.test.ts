@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { newClientSite } from './registry';
-import { parseRegistration, toSiteView } from './view';
+import { parseRegistration, pendingBySite, toSiteView } from './view';
 
 function form(fields: Record<string, string>) {
   const data = new FormData();
@@ -60,5 +60,48 @@ describe('parseRegistration', () => {
     ['apiKey', '']
   ])('refuses a bad %s', (key, value) => {
     expect(parseRegistration(form({ ...good, [key]: value })).ok).toBe(false);
+  });
+});
+
+describe('pendingBySite', () => {
+  const site = (slug: string, over: Partial<ReturnType<typeof newClientSite>> = {}) => ({
+    ...newClientSite({ name: slug, slug, baseUrl: 'https://x.example', repo: '/r', apiKey: 'k' }),
+    status: 'healthy' as const,
+    packages: { '@nebulakit/security': '0.1.0', '@nebulakit/commerce': '0.1.0' },
+    ...over
+  });
+  const releases = [
+    {
+      id: '@nebulakit/security@0.1.1',
+      package: '@nebulakit/security',
+      version: '0.1.1',
+      channel: 'security' as const,
+      ref: 'r1'
+    },
+    {
+      id: '@nebulakit/commerce@0.2.0',
+      package: '@nebulakit/commerce',
+      version: '0.2.0',
+      channel: 'feature' as const,
+      ref: 'r2'
+    }
+  ];
+
+  it('forces security, offers features, and skips what a site already has', () => {
+    const a = site('a');
+    const b = site('b', {
+      packages: { '@nebulakit/security': '0.1.1', '@nebulakit/commerce': '0.1.0' }
+    });
+    const out = pendingBySite([a, b], releases);
+    expect(out[a.id].map((p) => [p.releaseId, p.decision])).toEqual([
+      ['@nebulakit/security@0.1.1', 'apply'],
+      ['@nebulakit/commerce@0.2.0', 'offer']
+    ]);
+    expect(out[b.id].map((p) => p.decision)).toEqual(['offer']);
+  });
+
+  it('does not plan a site that did not answer', () => {
+    const down = site('down', { status: 'unreachable' });
+    expect(pendingBySite([down], releases)[down.id]).toBeUndefined();
   });
 });
