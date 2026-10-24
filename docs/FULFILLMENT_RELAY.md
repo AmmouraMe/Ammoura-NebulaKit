@@ -36,7 +36,8 @@ The distinction is the whole design. It lives in
 | Anything unrecognised                                    | transient | retried with backoff  |
 
 A shipping country that resolves to no ISO-2 code is permanent because no
-number of retries will change it — a human must correct the address. Checkout
+number of retries will change it — a human must correct the address, which the
+fulfillment screen lets them do (below). Checkout
 refuses such an address before payment (`$lib/data/countries`, see
 `CHECKOUT_AND_ORDERS.md`), so this case should now only reach the relay from an
 order placed before 2026-09-20, when the form offered a literal `Other`.
@@ -90,7 +91,14 @@ have not reached the fulfillment provider". It shows three things:
 
 Every row has a **Retry now** button. Retrying a dead-lettered relay reopens it
 with three fresh attempts, so a fixed cause gets a real chance rather than one
-shot. Both actions need the `orders:write` permission.
+shot.
+
+A dead-lettered row also has **Edit address**, which opens the order's shipping
+address for correction. The country is picked from the same list checkout uses
+and saved as its ISO-2 code; fields not on the form (the customer's email) are
+kept. Saving does not retry — press Retry now afterwards. A relay that is still
+pending cannot be edited, because the sweep may be mid-attempt on it. All three
+actions need the `orders:write` permission.
 
 When a relay dead-letters, every admin of that site gets an urgent in-app
 notification linking to this screen. The customer who paid should not be the one
