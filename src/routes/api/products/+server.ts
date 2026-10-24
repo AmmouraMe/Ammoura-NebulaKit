@@ -14,9 +14,14 @@ import {
   setProductShippingOptions
 } from '$lib/server/db';
 import { createProductRevision } from '$lib/server/db/product-revisions';
+import { shopperPricing, withShopperPrice } from '$lib/server/regional-pricing';
 
-// GET all products
-export const GET: RequestHandler = async ({ platform, locals }) => {
+/**
+ * GET all products. Base prices, unless `?pricing=shopper`: the storefront
+ * widgets ask for that and get this shopper's regional prices. Admin screens
+ * never ask, so a product editor never sees a lowered price it could save.
+ */
+export const GET: RequestHandler = async ({ platform, locals, url }) => {
   if (!platform?.env?.DB) {
     throw error(503, 'Database not available');
   }
@@ -26,6 +31,7 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
     const siteId = locals.siteId || 'default-site';
 
     const dbProducts = await getAllProducts(db, siteId);
+    const pricing = url.searchParams.get('pricing') === 'shopper' ? shopperPricing(locals) : null;
 
     const products = await Promise.all(
       dbProducts.map(async (p) => {
@@ -38,7 +44,7 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
           priceOverride: opt.priceOverride,
           thresholdOverride: opt.thresholdOverride
         }));
-        return {
+        const product = {
           id: p.id,
           name: p.name,
           description: p.description,
@@ -51,6 +57,7 @@ export const GET: RequestHandler = async ({ platform, locals }) => {
           fulfillmentOptions,
           shippingOptions
         };
+        return pricing ? withShopperPrice(pricing, product) : product;
       })
     );
 

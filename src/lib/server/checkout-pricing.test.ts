@@ -305,3 +305,69 @@ describe('repriceCheckout', () => {
     });
   });
 });
+
+describe('repriceCheckout with regional pricing', () => {
+  const settings = {
+    enabled: true,
+    strength: 0.5,
+    maxDiscount: 0.5,
+    overrides: {},
+    showNotice: true,
+    scope: 'digital' as const
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getTax.mockResolvedValue(taxSettings());
+  });
+
+  it('lowers a digital product by the order’s multiplier', async () => {
+    getProduct.mockResolvedValue({ id: 'p1', price: 20, type: 'digital' });
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', name: 'Font', price: 20, quantity: 2 }],
+      0,
+      { settings, multiplier: 0.6 }
+    );
+    expect(result.items[0].item.price).toBe(12);
+    expect(result.total).toBe(24);
+  });
+
+  it('leaves a physical product at base price when only digital is covered', async () => {
+    getProduct.mockResolvedValue({ id: 'p1', price: 20, type: 'physical' });
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', name: 'Tee', price: 12, quantity: 1 }],
+      0,
+      { settings, multiplier: 0.6 }
+    );
+    expect(result.items[0].item.price).toBe(20);
+  });
+
+  it('reads a variant’s product type to decide', async () => {
+    getVariant.mockResolvedValue({ id: 'v1', product_id: 'p1', price: 30 });
+    getProduct.mockResolvedValue({ id: 'p1', price: 25, type: 'digital' });
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', variant_id: 'v1', name: 'Pack / XL', price: 1, quantity: 1 }],
+      0,
+      { settings, multiplier: 0.5 }
+    );
+    expect(result.items[0].item.price).toBe(15);
+  });
+
+  it('lowers everything when the owner chose all', async () => {
+    getProduct.mockResolvedValue({ id: 'p1', price: 20, type: 'physical' });
+    const result = await repriceCheckout(
+      db,
+      SITE,
+      [{ product_id: 'p1', name: 'Tee', price: 20, quantity: 1 }],
+      0,
+      { settings: { ...settings, scope: 'all' }, multiplier: 0.75 }
+    );
+    expect(result.items[0].item.price).toBe(15);
+  });
+});

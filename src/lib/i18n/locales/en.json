@@ -203,5 +203,7 @@
   "home.ctaTitle": "Ready to Start Your Business?",
   "home.ctaSubtitle": "Join entrepreneurs around the world who are building their dreams with their own online stores.",
   "home.createYourStore": "Create Your Store",
-  "home.learnMore": "Learn More"
+  "home.learnMore": "Learn More",
+  "pricing.regionalNoticeAll": "Prices are adjusted for {country}: {percent}% off.",
+  "pricing.regionalNoticeDigital": "Digital products are {percent}% off for {country}."
 }

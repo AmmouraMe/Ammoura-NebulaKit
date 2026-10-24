@@ -14,6 +14,7 @@ import { translateProducts } from '$lib/server/i18n/content-translations';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { logProductAction } from '$lib/server/activity-logger';
+import { shopperPricing, withShopperPrice } from '$lib/server/regional-pricing';
 
 export const load: PageServerLoad = async ({
   params,
@@ -94,8 +95,9 @@ export const load: PageServerLoad = async ({
       carrier: opt.optionCarrier
     }));
 
-    // Transform database product to match the Product type
-    const product = {
+    // Transform database product to match the Product type, at this shopper's
+    // regional price (see $lib/server/regional-pricing)
+    const product = withShopperPrice(shopperPricing(locals), {
       id: dbProduct.id,
       name: dbProduct.name,
       description: dbProduct.description,
@@ -108,7 +110,7 @@ export const load: PageServerLoad = async ({
       fulfillmentOptions,
       shippingOptions,
       variants
-    };
+    });
 
     // Transform media items
     const media = dbMedia.map((m) => ({

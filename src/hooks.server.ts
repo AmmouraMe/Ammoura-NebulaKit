@@ -5,8 +5,10 @@ import { USER_SESSION_COOKIE } from '$lib/server/db/user-sessions';
 import {
   getSiteSettings,
   readComingSoon,
-  readLanguageSettings
+  readLanguageSettings,
+  readRegionalPricing
 } from '$lib/server/db/site-settings';
+import { DEFAULT_REGIONAL_PRICING } from '$lib/utils/regionalPricing';
 import { COMING_SOON_SLUG, decideGate, GATED_HEADERS, GATED_STATUS } from '$lib/server/coming-soon';
 import { resolveSiteIdForHostname } from '$lib/server/site-routing';
 import { getPlatformSitesDomain } from '$lib/server/sites-service';
@@ -107,7 +109,15 @@ export const handle: Handle = async ({ event, resolve }) => {
   // No accounts or orders from places under US sanctions. 451 is the status
   // for exactly this: refused for a legal reason. The body carries `error`
   // because that is the field the signup and checkout pages show.
-  const location = requestLocation(event.platform?.cf, event.request?.headers);
+  // In dev, Wrangler fills `platform.cf` with the developer's own location; a
+  // `cf-ipcountry` header sent by hand wins there, so any country can be tried.
+  const headers = event.request?.headers;
+  const location = requestLocation(
+    dev && headers?.has('cf-ipcountry') ? undefined : event.platform?.cf,
+    headers
+  );
+  event.locals.country = location.country;
+  event.locals.regionalPricing = DEFAULT_REGIONAL_PRICING;
   if (shouldBlockRequest(location, event.url.pathname, event.request?.method)) {
     event.locals.log.warn('restricted region refused', {
       country: location.country,
@@ -211,7 +221,8 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Note: in dev the /subdomain simulation shares one locale cookie across
   // simulated tenants (single origin) — harmless.
   let languageSettings = { defaultLocale: DEFAULT_LOCALE, enabledLocales: [DEFAULT_LOCALE] };
-  // The coming-soon gate is read from the SAME settings row set as the locales.
+  // The coming-soon gate (and regional pricing) is read from the SAME settings
+  // row set as the locales.
   // One read, two answers: a second query per request for one boolean would be a
   // tax on every page view of every tenant, forever.
   let comingSoon = { enabled: false };
@@ -221,6 +232,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       const settingsMap = new Map(rows.map((row) => [row.setting_key, row.setting_value]));
       languageSettings = readLanguageSettings(settingsMap);
       comingSoon = readComingSoon(settingsMap);
+      event.locals.regionalPricing = readRegionalPricing(settingsMap);
     } catch {
       // Defaults above, and the gate stays DOWN. A settings read that fails must
       // not take a live storefront offline.

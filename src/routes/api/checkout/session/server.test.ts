@@ -163,4 +163,45 @@ describe('POST /api/checkout/session', () => {
     expect(res.status).toBe(451);
     expect(createOrderMock).not.toHaveBeenCalled();
   });
+
+  describe('regional pricing', () => {
+    const settings = {
+      enabled: true,
+      strength: 0.5,
+      maxDiscount: 0.5,
+      overrides: { IN: 0.6 },
+      showNotice: true,
+      scope: 'digital'
+    };
+    function regionalRequest(country: string | null, addressCountry: string) {
+      const req = request({
+        shipping_address: { ...address, country: addressCountry },
+        billing_address: { ...address, country: addressCountry }
+      });
+      req.locals = { ...req.locals, country, regionalPricing: settings };
+      return req;
+    }
+
+    beforeEach(() => {
+      repriceMock.mockResolvedValue(
+        priced(0, 100, { enabled: false, ratePercent: 0, pricesIncludeTax: false })
+      );
+    });
+
+    it('prices an order whose countries agree at that country’s multiplier', async () => {
+      await POST(regionalRequest('IN', 'IN'));
+      expect(repriceMock.mock.calls[0][4]).toMatchObject({ multiplier: 0.6 });
+      expect(sessionsCreate.mock.calls[0][0].metadata.regionalPricing).toBe('IN ×0.6');
+    });
+
+    it('charges base price when an address disagrees with the connection', async () => {
+      await POST(regionalRequest('IN', 'US'));
+      expect(repriceMock.mock.calls[0][4]).toMatchObject({ multiplier: 1 });
+    });
+
+    it('charges base price when the connection’s country is unknown', async () => {
+      await POST(regionalRequest(null, 'IN'));
+      expect(repriceMock.mock.calls[0][4]).toBeUndefined();
+    });
+  });
 });

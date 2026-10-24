@@ -49,6 +49,10 @@
   );
   $: basePrice = selectedVariant ? selectedVariant.price : product.price;
   $: displayPrice = basePrice + fieldPriceModifier;
+  // Set when regional pricing lowered this price; shown struck through.
+  $: regularPrice = selectedVariant
+    ? (selectedVariant as { regularPrice?: number }).regularPrice
+    : product.regularPrice;
   $: cartQuantity = cartStore.getItemQuantity($cartItems, product.id, selectedVariantId);
   // A null variant stockQuantity means it isn't tracked locally (Printful is the
   // source of truth for print-on-demand inventory) — treat as always available.
@@ -181,6 +185,9 @@
     <div class="price-section">
       <div class="price-display">
         <span class="price">{$money(displayPrice)}</span>
+        {#if regularPrice && regularPrice > basePrice}
+          <s class="base-price">{$money(regularPrice + fieldPriceModifier)}</s>
+        {/if}
         {#if fieldPriceModifier > 0}
           <span class="base-price">(Base: {$money(basePrice)})</span>
         {/if}

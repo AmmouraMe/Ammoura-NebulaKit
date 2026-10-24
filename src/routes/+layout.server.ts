@@ -8,6 +8,7 @@ import { getDefaultLayout, getLayoutComponents } from '$lib/server/db/layouts';
 import { getComponent, getGlobalComponentByName } from '$lib/server/db/components';
 import { createSiteContext, createDefaultSiteContext } from '$lib/utils/templateSubstitution';
 import type { LayoutServerLoad } from './$types';
+import { shopperPricing, summarizeShopperPricing } from '$lib/server/regional-pricing';
 import type { WidgetConfig, PositionConfig, ResponsiveValue } from '$lib/types/pages';
 
 // Navbar config with component resolved and position settings from layout
@@ -90,6 +91,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
       currency: 'USD',
+      regionalPricing: summarizeShopperPricing(shopperPricing(locals)),
       layoutData: {
         navbar: { type: 'navbar' as const, config: defaultNavbarConfig, position: undefined },
         footer: null,
@@ -261,6 +263,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
       currency: generalSettings.currency || 'USD',
+      regionalPricing: summarizeShopperPricing(shopperPricing(locals)),
       layoutData
     };
   } catch (error) {
@@ -278,6 +281,7 @@ export const load: LayoutServerLoad = async ({ platform, locals }) => {
       locale: locals.locale ?? 'en',
       i18n: locals.i18n ?? { defaultLocale: 'en', enabledLocales: ['en'] },
       currency: 'USD',
+      regionalPricing: summarizeShopperPricing(shopperPricing(locals)),
       layoutData: {
         navbar: { type: 'navbar' as const, config: defaultNavbarConfig, position: undefined },
         footer: null,

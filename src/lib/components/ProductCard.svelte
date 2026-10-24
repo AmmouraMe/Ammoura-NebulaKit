@@ -97,7 +97,12 @@
 
     <div class="product-footer">
       <div class="price-container">
-        <span class="price">{$money(product.price)}</span>
+        <span class="price">
+          {$money(product.price)}
+          {#if product.regularPrice && product.regularPrice > product.price}
+            <s class="regular-price">{$money(product.regularPrice)}</s>
+          {/if}
+        </span>
         <span class="stock-info">
           {#if totalStock === 0}
             <span class="out-of-stock">Out of Stock</span>
@@ -403,5 +408,12 @@
     .price {
       font-size: 1.5rem;
     }
+  }
+
+  .regular-price {
+    margin-left: 0.35rem;
+    font-size: 0.8em;
+    font-weight: 400;
+    color: var(--color-text-tertiary);
   }
 </style>

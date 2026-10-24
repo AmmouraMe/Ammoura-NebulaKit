@@ -14,6 +14,11 @@ import { getProductById } from './db/products.js';
 import { getProductVariantById } from './db/product-variants.js';
 import { getTaxSettings } from './db/site-settings.js';
 import {
+  appliesToProduct,
+  regionalPrice,
+  type RegionalPricingSettings
+} from '../utils/regionalPricing.js';
+import {
   calculateOrderTax,
   calculateOrderTotal,
   NO_TAX,
@@ -93,12 +98,17 @@ function assertValidQuantity(quantity: unknown, label: string): number {
  * Shipping is passed through: it is chosen from server-offered options but the
  * selection logic (per-product groups, free-shipping thresholds) still lives in
  * the storefront, so the cost is not yet re-derivable here.
+ *
+ * `regional` lowers the price of each product the site's regional pricing
+ * covers, by the order's multiplier (`orderMultiplier` in
+ * `$lib/utils/regionalPricing`). Omitted, or at 1, every item is base price.
  */
 export async function repriceCheckout<T extends RepriceableItem>(
   db: D1Database,
   siteId: string,
   items: T[],
-  shippingCost: number
+  shippingCost: number,
+  regional?: { settings: RegionalPricingSettings; multiplier: number }
 ): Promise<RepricedCheckout<T>> {
   if (!Number.isFinite(shippingCost) || shippingCost < 0) {
     throw new CheckoutPricingError('Invalid shipping cost');
@@ -111,6 +121,7 @@ export async function repriceCheckout<T extends RepriceableItem>(
     const quantity = assertValidQuantity(item.quantity, label);
 
     let unitPrice: number;
+    let productType: string | null | undefined;
 
     if (item.variant_id) {
       const variant = await getProductVariantById(db, siteId, item.variant_id);
@@ -123,6 +134,10 @@ export async function repriceCheckout<T extends RepriceableItem>(
         throw new CheckoutPricingError(`Variant does not belong to "${label}"`);
       }
       unitPrice = variant.price;
+      // The variant row carries no product type; read it only when it matters.
+      if (regional && regional.multiplier < 1 && regional.settings.scope !== 'all') {
+        productType = (await getProductById(db, siteId, variant.product_id))?.type;
+      }
     } else {
       if (!item.product_id) {
         throw new CheckoutPricingError(`Missing product for "${label}"`);
@@ -132,10 +147,15 @@ export async function repriceCheckout<T extends RepriceableItem>(
         throw new CheckoutPricingError(`Unknown product "${label}"`);
       }
       unitPrice = product.price;
+      productType = product.type;
     }
 
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
       throw new CheckoutPricingError(`"${label}" is not purchasable`);
+    }
+
+    if (regional && appliesToProduct(regional.settings, productType)) {
+      unitPrice = regionalPrice(unitPrice, regional.multiplier);
     }
 
     unitPrice = roundMoney(unitPrice);

@@ -1,9 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import { getDB, getProductById } from '$lib/server/db';
 import type { RequestHandler } from './$types';
+import { shopperPricing, withShopperPrice } from '$lib/server/regional-pricing';
 
-// GET single product by ID
-export const GET: RequestHandler = async ({ params, platform, locals }) => {
+// GET single product by ID. Base price, unless `?pricing=shopper` (see
+// GET /api/products).
+export const GET: RequestHandler = async ({ params, platform, locals, url }) => {
   if (!platform?.env?.DB) {
     throw error(503, 'Database not available');
   }
@@ -30,7 +32,11 @@ export const GET: RequestHandler = async ({ params, platform, locals }) => {
       tags: JSON.parse(dbProduct.tags || '[]')
     };
 
-    return json(product);
+    return json(
+      url.searchParams.get('pricing') === 'shopper'
+        ? withShopperPrice(shopperPricing(locals), product)
+        : product
+    );
   } catch (err) {
     if (err && typeof err === 'object' && 'status' in err) {
       throw err;

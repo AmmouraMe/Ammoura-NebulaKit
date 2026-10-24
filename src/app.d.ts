@@ -21,6 +21,10 @@ declare global {
       /** The site's language configuration (validated against supported locales) */
       i18n: { defaultLocale: string; enabledLocales: string[] };
       isAdmin: boolean;
+      /** Where the request comes from (ISO-2), from Cloudflare; null when unknown. */
+      country?: string | null;
+      /** The site's regional pricing settings, read with the other site settings. */
+      regionalPricing?: import('$lib/utils/regionalPricing').RegionalPricingSettings;
       /** Platform account (site owner/collaborator), from the account_session cookie */
       account?: import('$lib/server/db/accounts').Account;
       currentUser?: import('$lib/server/db/users').DBUser;

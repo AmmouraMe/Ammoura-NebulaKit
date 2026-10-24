@@ -26,6 +26,7 @@
       params.set('limit', limit.toString());
       params.set('sortBy', sortBy);
       params.set('sortOrder', sortOrder);
+      params.set('pricing', 'shopper');
 
       const response = await fetch(`/api/products?${params}`);
       if (response.ok) {
