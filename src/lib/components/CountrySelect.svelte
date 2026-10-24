@@ -6,9 +6,15 @@
   Every country is listed. A short list with "Other" on the end used to take a
   customer's money and then strand the order: "Other" is not a country, so the
   fulfilment relay could never place it and dead-lettered it permanently.
+
+  The exception is the countries under US sanctions: we take no orders there,
+  so they are not offered. The server refuses them either way.
 -->
 <script lang="ts">
   import { COUNTRIES, COMMON_COUNTRIES } from '$lib/data/countries';
+  import { isRestrictedCountry } from '$lib/data/restrictedRegions';
+
+  const offered = COUNTRIES.filter((country) => !isRestrictedCountry(country.code));
 
   export let id: string;
   export let name: string | undefined = undefined;
@@ -32,7 +38,7 @@
     {/each}
   </optgroup>
   <optgroup label="All countries">
-    {#each COUNTRIES as country (country.code)}
+    {#each offered as country (country.code)}
       <option value={country.code}>{country.name}</option>
     {/each}
   </optgroup>

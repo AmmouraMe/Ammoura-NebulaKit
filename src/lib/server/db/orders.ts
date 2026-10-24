@@ -235,6 +235,24 @@ export async function updateOrderStatus(
 }
 
 /**
+ * Replace an order's shipping address (scoped by site). For correcting an
+ * address the fulfillment provider refused; returns false if no such order.
+ */
+export async function updateOrderShippingAddress(
+  db: D1Database,
+  siteId: string,
+  orderId: string,
+  shippingAddress: Record<string, unknown>
+): Promise<boolean> {
+  const timestamp = getCurrentTimestamp();
+  const result = await db
+    .prepare('UPDATE orders SET shipping_address = ?, updated_at = ? WHERE id = ? AND site_id = ?')
+    .bind(JSON.stringify(shippingAddress), timestamp, orderId, siteId)
+    .run();
+  return (result.meta?.changes || 0) > 0;
+}
+
+/**
  * Get an order by its Stripe Checkout Session ID (scoped by site)
  */
 export async function getOrderByStripeSessionId(
