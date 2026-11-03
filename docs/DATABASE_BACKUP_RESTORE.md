@@ -311,4 +311,4 @@ npm run db:restore -- --file backup.sql --to staging --wipe
 
 - [Database Management](./DATABASE_MANAGEMENT.md) - General database workflows
 - [Multi-Tenant Architecture](./MULTI_TENANT.md) - How tenant isolation works
-- [Preview Database Setup](./PREVIEW_DATABASE_SETUP.md) - Preview environment details
+- [Preview Database Quick Reference](../PREVIEW_DATABASE_QUICKREF.md) - Preview environment details

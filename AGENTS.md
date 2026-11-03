@@ -8,7 +8,7 @@ this codebase — the **Ammoura™** multi-tenant eCommerce platform.
 ### Commands
 
 - **Install**: `npm install` - Install dependencies (npm is the package
-  manager; Node.js 18+)
+  manager; Node.js 22, see `.nvmrc`)
 - **Dev**: `npm run dev` - Start development server on **port 4236**
   - The dev server is almost always already running in another terminal on
     port 4236. **Do not** start a second one — use

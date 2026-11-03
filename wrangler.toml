@@ -145,6 +145,11 @@ crons = []
 # so those need an explicit cert before they serve HTTPS.
 PLATFORM_SITES_DOMAIN = "dev-staging-e2ab5e.ammoura.me"
 
+# One-click dev logins (the DEV panel on the login screens and
+# /api/dev/login-as). Only "true" switches them on; see src/lib/server/dev-login.ts.
+# Never set this on production.
+DEV_LOGIN = "true"
+
 # Custom domain: wrangler creates and owns the proxied DNS record on the
 # ammoura.me zone, and issues the edge certificate.
 [[env.dev-staging.routes]]

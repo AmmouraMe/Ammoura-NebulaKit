@@ -3,11 +3,16 @@
   import { copyShippingToBilling } from '../stores/checkout';
   import type { BillingAddress } from '../types/checkout';
   import CountrySelect from './CountrySelect.svelte';
+  import { addressFieldLabels, postalCodeRequired, regionRequired } from '$lib/data/countries';
 
   export let errors: Partial<Record<keyof BillingAddress, string>> = {};
 
   $: formData = $checkoutStore.formData.billingAddress;
   $: sameAsShipping = $checkoutStore.formData.sameAsShipping;
+
+  $: ({ region: regionLabel, postalCode: postalLabel } = addressFieldLabels(formData.country));
+  $: needsRegion = regionRequired(formData.country);
+  $: needsPostalCode = postalCodeRequired(formData.country);
 
   // Update billing address when sameAsShipping changes
   $: if (sameAsShipping) {
@@ -105,7 +110,7 @@
         </div>
 
         <div class="form-group">
-          <label for="billingState">State *</label>
+          <label for="billingState">{regionLabel}{needsRegion ? ' *' : ''}</label>
           <input
             type="text"
             id="billingState"
@@ -122,7 +127,7 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="billingZipCode">ZIP Code *</label>
+          <label for="billingZipCode">{postalLabel}{needsPostalCode ? ' *' : ''}</label>
           <input
             type="text"
             id="billingZipCode"

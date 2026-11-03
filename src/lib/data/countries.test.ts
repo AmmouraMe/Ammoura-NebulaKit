@@ -5,6 +5,11 @@ import {
   COMMON_COUNTRY_CODES,
   countryName,
   isCountryCode,
+  isPostalCode,
+  POSTCODE_FREE_COUNTRY_CODES,
+  postalCodeRequired,
+  regionRequired,
+  REGION_REQUIRED_COUNTRY_CODES,
   toCountryCode
 } from './countries';
 
@@ -85,5 +90,27 @@ describe('countries', () => {
     it('shows an unknown value rather than losing it', () => {
       expect(countryName('Other')).toBe('Other');
     });
+  });
+
+  it('lists only real countries as having no postal code or needing a region', () => {
+    for (const code of [...POSTCODE_FREE_COUNTRY_CODES, ...REGION_REQUIRED_COUNTRY_CODES]) {
+      expect(isCountryCode(code)).toBe(true);
+    }
+  });
+
+  it('knows where a postal code or a region is required, by code or by name', () => {
+    expect(postalCodeRequired('United States')).toBe(true);
+    expect(postalCodeRequired('HK')).toBe(false);
+    expect(regionRequired('Canada')).toBe(true);
+    expect(regionRequired('GB')).toBe(false);
+  });
+
+  it('checks US and Canadian postal codes by their shape, others loosely', () => {
+    expect(isPostalCode('10001', 'US')).toBe(true);
+    expect(isPostalCode('SW1A 1AA', 'US')).toBe(false);
+    expect(isPostalCode('K1A 0B1', 'CA')).toBe(true);
+    expect(isPostalCode('SW1A 1AA', 'GB')).toBe(true);
+    expect(isPostalCode('75008', 'FR')).toBe(true);
+    expect(isPostalCode('1', 'DE')).toBe(false);
   });
 });

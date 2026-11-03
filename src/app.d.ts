@@ -40,6 +40,7 @@ declare global {
         MEDIA_BUCKET: R2Bucket;
         SITE_ROUTES?: KVNamespace; // hostname → site id route cache (optional binding)
         PLATFORM_SITES_DOMAIN?: string; // wildcard domain for free platform subdomains
+        DEV_LOGIN?: string; // "true" enables one-click dev logins (dev-staging only)
         CLOUDFLARE_API_TOKEN?: string; // secret: Cloudflare for SaaS custom hostnames
         CLOUDFLARE_ZONE_ID?: string; // zone id custom hostnames are provisioned on
         RESEND_API_KEY?: string; // secret: outbound email; absent in dev → console log

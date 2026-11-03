@@ -2,10 +2,12 @@ import type { PageServerLoad } from './$types';
 import { getDB } from '$lib/server/db/connection';
 import { getEnabledSSOProviders } from '$lib/server/db/sso-providers';
 import { getEnvOAuthProviders } from '$lib/server/oauth/env-providers';
+import { isDevLoginEnabled } from '$lib/server/dev-login';
 
 export const load: PageServerLoad = async ({ platform, locals }) => {
   const db = getDB(platform);
   const siteId = locals.siteId;
+  const devLoginEnabled = isDevLoginEnabled(platform?.env as Record<string, unknown> | undefined);
 
   try {
     // Fetch enabled SSO providers from database
@@ -37,13 +39,15 @@ export const load: PageServerLoad = async ({ platform, locals }) => {
     }
 
     return {
-      ssoProviders: providers
+      ssoProviders: providers,
+      devLoginEnabled
     };
   } catch (error) {
     console.error('Failed to load SSO providers:', error);
     // Return empty array on error, login should still work with password
     return {
-      ssoProviders: []
+      ssoProviders: [],
+      devLoginEnabled
     };
   }
 };

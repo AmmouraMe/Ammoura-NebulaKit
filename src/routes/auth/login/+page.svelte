@@ -175,7 +175,7 @@
       </div>
     </form>
 
-    <DevLoginPanel />
+    <DevLoginPanel enabled={data.devLoginEnabled} />
   </div>
 </div>
 

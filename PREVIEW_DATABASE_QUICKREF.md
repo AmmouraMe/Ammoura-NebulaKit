@@ -4,17 +4,19 @@
 
 There are three database environments:
 
-1. **Remote Preview D1** - Cloudflare's preview database (used by
-   `npm run preview` and Cloudflare Pages preview deployments)
-2. **Local D1** - SQLite-based emulation stored in `.wrangler/state/` (used by
-   `npm run preview:local`)
-3. **Remote Production D1** - Cloudflare's production database (used by
-   `npm run preview:prod`)
+1. **Remote Preview D1** (`hermes-db-preview`) - Cloudflare's shared preview
+   database. `npm run preview` and the **Preview deploy** GitHub Action use it.
+2. **Local D1** - SQLite emulation stored in `.wrangler/state/`.
+   `npm run preview:local` and `npm run dev` use it.
+3. **Remote Production D1** (`hermes-db`) - `npm run preview:prod` uses it.
+
+The `hermes-` prefix is the project's old codename. The names are live
+Cloudflare resources; see `wrangler.toml`.
 
 ## Preview Commands
 
 ```bash
-# Local build + remote preview database (matches Cloudflare Pages preview)
+# Local build + remote preview database (matches the preview Worker)
 npm run preview
 
 # Local build + local database (fast development, no cloud connection)
@@ -27,17 +29,17 @@ npm run preview:prod
 ### `npm run preview` (Remote Preview DB) ⭐ Recommended
 
 - Builds the production bundle
-- Connects to the **remote preview D1 database** via
-  `wrangler dev --remote --env preview`
-- Uses the same database as Cloudflare Pages preview deployments
+- Runs `wrangler dev --remote --env preview` against the compiled worker
+  (`.svelte-kit/cloudflare/_worker.js`)
+- Uses the same D1 and R2 (`hermes-media-preview`) as the preview Worker
 - Available at `http://localhost:4236`
-- **Best for:** Testing exactly what you'll see in Cloudflare preview builds
+- **Best for:** Testing what the preview deployment will show
 
 ### `npm run preview:local` (Local DB)
 
 - Builds the production bundle
-- Sets up local D1 database with seed data
-- Starts `wrangler pages dev` with local bindings
+- Migrates and seeds the local D1 database (`db:setup:local:seed`)
+- Runs `wrangler dev` with local bindings
 - Available at `http://localhost:4236`
 - **Best for:** Fast iteration when offline or avoiding cloud costs
 
@@ -49,32 +51,22 @@ npm run preview:prod
 - **Best for:** Debugging production issues locally
 - ⚠️ **Caution:** This uses live production data!
 
-## Testing Against Remote Preview Database
+## Preview Deployments
 
-When you run `npm run preview`, you're testing against the same remote preview
-database that Cloudflare Pages uses for preview deployments. This ensures:
+The preview Worker (`hermes-preview`) is deployed by hand. Open **Actions →
+Preview deploy → Run workflow** in GitHub, pick the branch, and optionally give
+a PR number to comment the URL on. The workflow builds, applies pending
+migrations to the shared preview D1, and runs `wrangler deploy --env preview`.
 
-- What you see locally matches what you'll see on preview URLs
-- Database schema and data are identical to cloud preview
-- R2 storage uses the preview bucket (`hermes-media-preview`)
+Two things to know:
 
-### Alternative: Deploy to Cloudflare Pages
+- The preview environment is **shared**. The last branch to run wins.
+- The workflow **never wipes or reseeds** the preview database. Reset it by
+  hand when a branch needs clean data (next section).
 
-1. Push your branch to GitHub
-2. Wait for Cloudflare Pages to build
-3. Access the preview URL (e.g., `https://your-branch.hermes-1dh.pages.dev/`)
+Details: [docs/CI.md](docs/CI.md#preview-deploys).
 
-Note: Cloudflare Pages preview builds automatically wipe and re-seed the
-database on each push.
-
-## Commands
-
-### Automatic (Cloudflare Pages)
-
-- **Preview builds**: Database automatically wiped → migrated → seeded
-- **Production builds**: Database automatically migrated only
-
-### Manual Database Commands
+## Manual Database Commands
 
 ```bash
 # Preview database (full reset with seed data)
@@ -92,72 +84,25 @@ npm run db:setup:local:seed
 
 ## Technical Details
 
-### Why Different Commands?
-
 | Command                 | Tool                                  | Bindings          | Use Case                        |
 | ----------------------- | ------------------------------------- | ----------------- | ------------------------------- |
 | `npm run preview`       | `wrangler dev --remote --env preview` | Remote preview    | Test against cloud preview data |
-| `npm run preview:local` | `wrangler pages dev`                  | Local emulation   | Fast local testing (offline OK) |
+| `npm run preview:local` | `wrangler dev`                        | Local emulation   | Fast local testing (offline OK) |
 | `npm run preview:prod`  | `wrangler dev --remote`               | Remote production | Debug prod issues               |
 
-**Note:** `wrangler pages dev` only supports local D1/R2 emulation. To connect
-to remote Cloudflare resources, we use `wrangler dev` with the `--remote` flag,
-pointing to the compiled worker entry point
-(`.svelte-kit/cloudflare/_worker.js`).
+`wrangler dev` without `--remote` only emulates D1 and R2 locally. To reach
+remote Cloudflare resources, the remote commands pass `--remote` and point at
+the compiled worker entry point.
 
 ### First Run Notes
 
 The first time you run `npm run preview`, wrangler may prompt you to
-authenticate with Cloudflare if you haven't already. Run `wrangler login` first
-if needed.
-
-## Files Modified
-
-1. ✅ `scripts/preview-build.js` - New automated build script
-2. ✅ `package.json` - Added `build:pages` script
-3. ✅ `wrangler.toml` - Added `[build]` configuration
-4. ✅ `docs/DATABASE.md` - Added preview setup section
-5. ✅ `docs/PREVIEW_DATABASE_SETUP.md` - New comprehensive guide
-
-## How to Test
-
-### Local Simulation
-
-```powershell
-# Simulate preview environment
-$env:CF_PAGES = "1"
-$env:CF_PAGES_BRANCH = "test-branch"
-npm run build:pages
-
-# Clean up
-Remove-Item Env:\CF_PAGES
-Remove-Item Env:\CF_PAGES_BRANCH
-```
-
-### Real Preview
-
-1. Push to any non-main branch
-2. Check Cloudflare Pages build logs
-3. Visit preview URL and verify data
-
-## Environment Detection
-
-| Environment | CF_PAGES  | CF_PAGES_BRANCH | Database Actions      |
-| ----------- | --------- | --------------- | --------------------- |
-| Preview     | `"1"`     | Not `main`      | Wipe → Migrate → Seed |
-| Production  | `"1"`     | `main`          | Migrate only          |
-| Local       | undefined | undefined       | Skip (manual control) |
+authenticate with Cloudflare. Run `wrangler login` first if needed.
 
 ## Troubleshooting
 
-**Build fails with wrangler errors?** → Check Cloudflare API credentials in
-repository secrets
+**Preview deploy fails with wrangler errors?** → Check the Cloudflare API
+credentials in repository secrets (see [docs/CI.md](docs/CI.md)).
 
-**Database not wiped?** → Verify you're on a non-main branch
-
-**Seed data missing?** → Check `scripts/seed-data.sql` for errors
-
-## Rollback
-
-Remove the `[build]` section from `wrangler.toml` and Cloudflare will use
-default build.
+**Seed data missing?** → Run `npm run db:reset:preview`, then check
+`scripts/seed-data.sql` for errors.

@@ -42,10 +42,6 @@ async function migrate() {
     console.log('🚀 Starting database migration...');
 
     const wranglerArgs = ['d1', 'migrations', 'apply', databaseName];
-    // Detect Cloudflare Pages preview build
-    const cfPagesBranch = process.env.CF_PAGES_BRANCH;
-    const isPagesPreview = cfPagesBranch && cfPagesBranch !== 'main';
-
     // Environment selection logic:
     // 1. Local: --local
     // 2. Preview (local or remote): --preview --remote
@@ -53,13 +49,9 @@ async function migrate() {
     if (isLocal) {
       wranglerArgs.push('--local');
       console.log('📍 Environment: Local');
-    } else if (isPreview || isPagesPreview) {
+    } else if (isPreview) {
       wranglerArgs.push('--preview', '--remote');
-      if (isPagesPreview) {
-        console.log('📍 Environment: Preview (Cloudflare Pages, using --remote)');
-      } else {
-        console.log('📍 Environment: Preview (local or CI, using --remote)');
-      }
+      console.log('📍 Environment: Preview (local or CI, using --remote)');
     } else {
       wranglerArgs.push('--remote');
       console.log('📍 Environment: Production (using --remote)');

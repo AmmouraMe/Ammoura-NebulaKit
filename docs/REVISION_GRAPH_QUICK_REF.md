@@ -214,7 +214,7 @@ npm test -- src/lib/components/admin/RevisionHistoryGraph.test.ts
 Visual test page:
 
 ```
-Open test-revision-graph-visual.html in browser
+Open tests/manual/revision-graph-visual.html in a browser
 ```
 
 ## Accessibility
@@ -271,4 +271,4 @@ For issues or questions:
 
 1. Check the implementation docs: `docs/REVISION_GRAPH_IMPLEMENTATION.md`
 2. Review test cases: `RevisionHistoryGraph.test.ts`
-3. Examine visual tests: `test-revision-graph-visual.html`
+3. Examine visual tests: `tests/manual/revision-graph-visual.html`

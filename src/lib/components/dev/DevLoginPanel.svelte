@@ -1,11 +1,15 @@
 <script lang="ts">
   /**
-   * Dev-only quick logins, embedded on the login screens. Renders nothing
-   * outside `vite dev`; the API it calls (/api/dev/login-as) 404s in
-   * production builds regardless.
+   * Quick logins for dev and staging, embedded on the login screens. Renders
+   * under `vite dev`, or when the page's server load says the environment
+   * enables them (`DEV_LOGIN = "true"`, see $lib/server/dev-login). The API it
+   * calls (/api/dev/login-as) applies the same gate and 404s otherwise.
    */
   import { dev } from '$app/environment';
   import { invalidateAll, goto } from '$app/navigation';
+
+  /** Server-side verdict for built Workers; ignored under `vite dev`. */
+  export let enabled = false;
 
   let busy = '';
 
@@ -30,7 +34,7 @@
   }
 </script>
 
-{#if dev}
+{#if dev || enabled}
   <div class="dev-logins">
     <span class="dev-label">DEV</span>
     <div class="dev-buttons">

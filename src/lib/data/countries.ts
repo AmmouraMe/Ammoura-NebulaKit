@@ -356,3 +356,108 @@ export function toCountryCode(country: string): string | null {
 export const COMMON_COUNTRIES: readonly Country[] = COMMON_COUNTRY_CODES.map((code) =>
   BY_CODE.get(code)
 ).filter((c): c is Country => Boolean(c));
+
+/**
+ * Countries whose addresses have no postal code. A customer there must be
+ * able to leave the field blank; requiring one strands them at checkout.
+ */
+export const POSTCODE_FREE_COUNTRY_CODES: readonly string[] = [
+  'AE',
+  'AG',
+  'AO',
+  'AW',
+  'BF',
+  'BI',
+  'BJ',
+  'BO',
+  'BS',
+  'BW',
+  'BZ',
+  'CD',
+  'CF',
+  'CG',
+  'CI',
+  'CK',
+  'CM',
+  'DJ',
+  'DM',
+  'ER',
+  'FJ',
+  'GA',
+  'GD',
+  'GH',
+  'GM',
+  'GQ',
+  'GY',
+  'HK',
+  'KI',
+  'KM',
+  'KN',
+  'KP',
+  'LC',
+  'ML',
+  'MO',
+  'MR',
+  'MW',
+  'NR',
+  'NU',
+  'QA',
+  'RW',
+  'SB',
+  'SC',
+  'SL',
+  'SR',
+  'ST',
+  'SY',
+  'TD',
+  'TF',
+  'TG',
+  'TK',
+  'TL',
+  'TO',
+  'TV',
+  'UG',
+  'VU',
+  'YE',
+  'ZW'
+];
+
+/** Countries where Printful needs a state or province code to ship. */
+export const REGION_REQUIRED_COUNTRY_CODES: readonly string[] = ['US', 'CA', 'AU'];
+
+export function postalCodeRequired(country: string): boolean {
+  return !POSTCODE_FREE_COUNTRY_CODES.includes(toCountryCode(country) ?? '');
+}
+
+export function regionRequired(country: string): boolean {
+  return REGION_REQUIRED_COUNTRY_CODES.includes(toCountryCode(country) ?? '');
+}
+
+/**
+ * Whether `postalCode` looks like a postal code for `country`. The US and
+ * Canada have one fixed shape each; everywhere else the shapes are too many
+ * to list, so any short run of letters, digits, spaces and hyphens passes.
+ */
+export function isPostalCode(postalCode: string, country: string): boolean {
+  const value = postalCode.trim();
+  switch (toCountryCode(country)) {
+    case 'US':
+      return /^\d{5}(-\d{4})?$/.test(value);
+    case 'CA':
+      return /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(value);
+    default:
+      return /^[A-Za-z0-9][A-Za-z0-9 -]{1,9}$/.test(value);
+  }
+}
+
+/** What an address form should call its region and postal-code fields. */
+export function addressFieldLabels(country: string): { region: string; postalCode: string } {
+  switch (toCountryCode(country)) {
+    case 'US':
+      return { region: 'State', postalCode: 'ZIP code' };
+    case 'CA':
+      return { region: 'Province', postalCode: 'Postal code' };
+    default:
+      return { region: 'State / region', postalCode: 'Postal code' };
+  }
+}

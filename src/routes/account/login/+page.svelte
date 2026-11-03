@@ -2,6 +2,9 @@
   import { goto } from '$app/navigation';
   import { t } from '$lib/i18n';
   import DevLoginPanel from '$lib/components/dev/DevLoginPanel.svelte';
+  import type { PageData } from './$types';
+
+  export let data: PageData;
 
   let email = '';
   let password = '';
@@ -84,7 +87,7 @@
       {$t('auth.newHere')} <a href="/signup">{$t('auth.createAccountLink')}</a>
     </p>
 
-    <DevLoginPanel />
+    <DevLoginPanel enabled={data.devLoginEnabled} />
   </div>
 </div>
 

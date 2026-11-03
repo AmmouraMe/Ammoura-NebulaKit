@@ -52,6 +52,15 @@ at `/signup` with the address in `PLATFORM_ENGINEER_EMAIL` and the role is
 applied on the next sign-in — see
 [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md).
 
+### One-click logins
+
+Staging sets `DEV_LOGIN = "true"` in its `[env.dev-staging.vars]`, so the DEV
+panel that `vite dev` shows on `/auth/login` and `/account/login` is there too:
+**New user**, **Existing user** (`dev@dev.local`, with a Dev Store) and
+**Superadmin** (`superadmin@dev.local`, platform engineer). The gate is
+`src/lib/server/dev-login.ts`; the panel and `/api/dev/login-as` both use it,
+and only the exact string `"true"` switches it on. Production never sets it.
+
 To work against realistic data instead, restore a production backup into the
 staging database (`npm run db:backup:production`, then `npm run db:restore`).
 Never repoint the staging binding at `hermes-db`.

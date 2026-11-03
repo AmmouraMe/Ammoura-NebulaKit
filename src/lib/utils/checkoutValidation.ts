@@ -4,7 +4,42 @@ import type {
   PaymentMethod,
   CheckoutValidationErrors
 } from '../types/checkout';
-import { toCountryCode } from '$lib/data/countries';
+import {
+  isPostalCode,
+  postalCodeRequired,
+  regionRequired,
+  toCountryCode
+} from '$lib/data/countries';
+
+/**
+ * State and postal code depend on the country: a US address needs both in US
+ * shapes, a UK one has no state and a postcode with letters in it, a Hong Kong
+ * one has neither. Holding every country to the US rules turned away every
+ * customer outside it.
+ */
+function validateRegionAndPostalCode(address: {
+  state: string;
+  zipCode: string;
+  country: string;
+}): { state?: string; zipCode?: string } {
+  const errors: { state?: string; zipCode?: string } = {};
+  const country = address.country ?? '';
+  const state = address.state?.trim() ?? '';
+  const zipCode = address.zipCode?.trim() ?? '';
+
+  if (regionRequired(country) && state.length < 2) {
+    errors.state = 'Please enter a valid state or province';
+  }
+
+  if (zipCode ? !isPostalCode(zipCode, country) : postalCodeRequired(country)) {
+    errors.zipCode =
+      toCountryCode(country) === 'US'
+        ? 'Please enter a valid ZIP code'
+        : 'Please enter a valid postal code';
+  }
+
+  return errors;
+}
 
 export function validateShippingAddress(
   address: ShippingAddress
@@ -35,13 +70,7 @@ export function validateShippingAddress(
     errors.city = 'Please enter a valid city';
   }
 
-  if (!address.state || address.state.trim().length < 2) {
-    errors.state = 'Please enter a valid state';
-  }
-
-  if (!address.zipCode || !isZipCode(address.zipCode)) {
-    errors.zipCode = 'Please enter a valid ZIP code';
-  }
+  Object.assign(errors, validateRegionAndPostalCode(address));
 
   // A country we cannot resolve to an ISO-2 code cannot be shipped to, so it
   // is refused here rather than at the fulfilment relay, after payment.
@@ -73,13 +102,7 @@ export function validateBillingAddress(
     errors.city = 'Please enter a valid city';
   }
 
-  if (!address.state || address.state.trim().length < 2) {
-    errors.state = 'Please enter a valid state';
-  }
-
-  if (!address.zipCode || !isZipCode(address.zipCode)) {
-    errors.zipCode = 'Please enter a valid ZIP code';
-  }
+  Object.assign(errors, validateRegionAndPostalCode(address));
 
   // A country we cannot resolve to an ISO-2 code cannot be shipped to, so it
   // is refused here rather than at the fulfilment relay, after payment.
@@ -134,11 +157,6 @@ function isEmail(email: string): boolean {
 function isPhoneNumber(phone: string): boolean {
   const phoneRegex = /^[\d\s\-()+]{10,}$/;
   return phoneRegex.test(phone.replace(/\s/g, ''));
-}
-
-function isZipCode(zipCode: string): boolean {
-  const zipRegex = /^\d{5}(-\d{4})?$/;
-  return zipRegex.test(zipCode);
 }
 
 function isCreditCardNumber(cardNumber: string): boolean {
